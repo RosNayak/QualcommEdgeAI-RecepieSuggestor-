@@ -4,16 +4,21 @@ import android.util.Log;
 
 import androidx.activity.ComponentActivity;
 import androidx.annotation.MainThread;
+import androidx.annotation.OptIn;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ExperimentalGetImage;
+import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 
+import com.example.recepiesuggestor.utils.ImageAnalyzer;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 
 public class CameraXController {
 
@@ -46,7 +51,7 @@ public class CameraXController {
     }
 
     /** Rebind preview (used on first start and when switching cameras). */
-    @MainThread
+    @OptIn(markerClass = ExperimentalGetImage.class) @MainThread
     public void bindPreviewUseCase() {
         if (cameraProvider == null) return;
 
@@ -55,11 +60,21 @@ public class CameraXController {
         Preview preview = new Preview.Builder().build();
         preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
+        // 1. Create ImageAnalysis and set Analyzer (as described in steps 1-3)
+        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build();
+
+        // Using the main executor for simplicity here, but a dedicated background executor is better
+        Executor analysisExecutor = ContextCompat.getMainExecutor(activity);
+        imageAnalysis.setAnalyzer(analysisExecutor, new ImageAnalyzer(activity));
+
         try {
             boundCamera = cameraProvider.bindToLifecycle(
                     activity, // LifecycleOwner (ComponentActivity implements it)
                     cameraSelector,
-                    preview
+                    preview,
+                    imageAnalysis
             );
         } catch (IllegalStateException e) {
             Log.e("CameraXController", "bindToLifecycle failed", e);
