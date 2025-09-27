@@ -13,6 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+
 # Gradle wrapper properties (if you want to ignore wrapper version changes)
 gradle/wrapper/gradle-wrapper.properties
 
