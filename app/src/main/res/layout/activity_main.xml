@@ -18,11 +18,18 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Camera Preview or Video View -->
-        <SurfaceView
+<!--        <SurfaceView-->
+<!--            android:id="@+id/camera_preview"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_gravity="center" />-->
+
+        <androidx.camera.view.PreviewView
             android:id="@+id/camera_preview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center" />
+
 
         <!-- Alternative: Use VideoView for playing videos -->
         <!--
