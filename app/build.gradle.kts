@@ -64,4 +64,8 @@ dependencies {
 //    Recycleriew
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
+    //google ml kit
+//    implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
+    implementation("com.google.mlkit:image-labeling:17.0.9")
+
 }
