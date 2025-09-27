@@ -6,6 +6,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ImageButton;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.view.PreviewView;
+import com.example.recepiesuggestor.ui.CameraXController;
+import com.example.recepiesuggestor.utils.PermissionHelper;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +26,8 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.OnR
     private RecyclerView recyclerView;
     private RecipeAdapter recipeAdapter;
     private List<Recipe> recipeList;
+
+    private CameraXController cameraController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +48,22 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.OnR
         // Initialize and set adapter
         recipeAdapter = new RecipeAdapter(recipeList, this);
         recyclerView.setAdapter(recipeAdapter);
+
+        PreviewView previewView = findViewById(R.id.camera_preview);
+        ImageButton switchBtn = findViewById(R.id.btn_switch_camera);
+
+        cameraController = new CameraXController(this, previewView);
+        PermissionHelper permissionHelper = new PermissionHelper(this);
+
+        // Ask for camera permission, then start CameraX
+        permissionHelper.ensureCameraPermission(
+                () -> cameraController.start(),
+                () -> Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show()
+        );
+
+        if (switchBtn != null) {
+            switchBtn.setOnClickListener(v -> cameraController.switchCamera());
+        }
     }
 
     @Override
@@ -49,5 +74,12 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.OnR
         intent.putExtra(EXTRA_INSTRUCTIONS, recipe.getInstructions());
         intent.putExtra(EXTRA_IMAGE_ID, recipe.getImageResourceId());
         startActivity(intent);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Optional: free resources when backgrounded
+        // cameraController.stop();
     }
 }

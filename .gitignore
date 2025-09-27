@@ -26,3 +26,8 @@ gradle/wrapper/gradle-wrapper.properties
 .idea/
 !.idea/codeStyles/
 !.idea/inspectionProfiles/
+gradle/wrapper/gradle-wrapper.properties
+
+# IDE specific files
+.idea/gradle.xml
+.idea/misc.xml
