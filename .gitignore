@@ -13,3 +13,14 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Gradle wrapper properties (if you want to ignore wrapper version changes)
+gradle/wrapper/gradle-wrapper.properties
+
+# IDE specific files
+.idea/gradle.xml
+.idea/misc.xml
+
+# Or more broadly, ignore all .idea files except specific ones you want to track:
+.idea/
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
