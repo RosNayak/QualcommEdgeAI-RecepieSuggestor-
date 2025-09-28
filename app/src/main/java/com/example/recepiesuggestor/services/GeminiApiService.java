@@ -64,6 +64,7 @@ public class GeminiApiService {
         StringBuilder sb = new StringBuilder();
         sb.append("Given these ingredients: ");
         sb.append(String.join(", ", ingredients));
+        sb.append("Consider only the food ingredients in this list. ");
         sb.append("\n\nGenerate 3-5 realistic recipes that can be made with these ingredients. ");
         sb.append("Return ONLY a JSON array with this exact format:\n");
         sb.append("[\n");
