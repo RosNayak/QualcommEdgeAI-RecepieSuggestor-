@@ -1,6 +1,7 @@
 import os
 import httpx
 from typing import List, Dict
+from fastapi import HTTPException
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
@@ -8,28 +9,28 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
 
 PROMPT_TEMPLATE = """You are a helpful cooking assistant.
-Given these ingredients: {ingredients}
-servings: {servings}
-dietary constraints (if any): {dietary}
+Given these ingredients: {ingredients}.
+Consider only the food ingredients from this list.
 
-Return 3 concise recipes. For each recipe include:
-- Title
-- Ingredients (subset of provided + minimal pantry items)
-- 5-8 clear steps
+Generate 3-5 realistic recipes that can be made with these ingredients. 
+Return ONLY a JSON array with this exact format:
+    title: Recipe Name
+    description: Brief description
+    ingredients: [ingredient1,ingredient2,ingredient3]
+    instructions: Step 1 \n Step 2 \n Step 3
 
-Keep it short and practical.
+Make recipes practical and realistic. Use common cooking techniques.
 """
 
 def build_prompt(ingredients: List[str], servings: int, dietary: List[str] | None) -> str:
     return PROMPT_TEMPLATE.format(
         ingredients=", ".join(ingredients) if ingredients else "none specified",
-        servings=servings,
-        dietary=", ".join(dietary) if dietary else "none"
     )
 
 async def recipes_from_gemini(ingredients: List[str], servings: int, dietary: List[str] | None) -> Dict:
     if not GEMINI_API_KEY:
-        raise RuntimeError("GEMINI_API_KEY not set on server")
+        # Surface a clear error to the client instead of a generic 500
+        raise HTTPException(status_code=503, detail="Server is missing GEMINI_API_KEY")
 
     prompt = build_prompt(ingredients, servings, dietary)
     payload = {
@@ -42,19 +43,24 @@ async def recipes_from_gemini(ingredients: List[str], servings: int, dietary: Li
         ]
     }
 
-    async with httpx.AsyncClient(timeout=30) as client:
-        r = await client.post(GEMINI_URL, json=payload)
-        r.raise_for_status()
-        data = r.json()
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(GEMINI_URL, json=payload)
+            # If non-200, include response body to help debugging
+            if r.status_code >= 400:
+                raise HTTPException(status_code=502, detail=f"Upstream error from Gemini: {r.status_code} {r.text}")
+            data = r.json()
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"Network error calling Gemini: {e}")
 
     # Extract text safely
     text = ""
     try:
         text = data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception:
-        text = "Could not parse model response."
+        raise HTTPException(status_code=502, detail="Unexpected response format from Gemini")
 
-    # Very light parser: expect the model to produce blocks. Fallback to 1 recipe.
+    # Very light parser: expect the model to produce blocks.
     blocks = [b.strip() for b in text.split("\n\n") if b.strip()]
     recipes = []
     current = {"title": "", "ingredients": [], "steps": []}
@@ -70,18 +76,15 @@ async def recipes_from_gemini(ingredients: List[str], servings: int, dietary: Li
     for line in blocks:
         low = line.lower()
         if "title:" in low:
-            # start new recipe
             flush_current()
             current = {"title": line.split(":",1)[1].strip(), "ingredients": [], "steps": []}
         elif low.startswith("ingredients"):
-            # split lines after colon
             items = [x.strip("-• ").strip() for x in line.split("\n")[1:]]
             current["ingredients"].extend([i for i in items if i])
         elif low.startswith("steps"):
             steps = [x.strip("-• ").strip() for x in line.split("\n")[1:]]
             current["steps"].extend([s for s in steps if s])
         else:
-            # heuristic: if looks like a step bullet
             if line.startswith(("-", "•")):
                 current["steps"].append(line.strip("-• ").strip())
             elif not current["title"]:
