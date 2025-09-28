@@ -29,9 +29,29 @@ def verify_client_token(creds: HTTPAuthorizationCredentials = Depends(security))
     if creds is None or creds.scheme.lower() != "bearer" or creds.credentials != CLIENT_TOKEN:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
+@app.get("/")
+async def root():
+    return {
+        "service": "Recipe LLM Backend",
+        "docs": "/docs",
+        "health": "/health",
+        "recipes": {"POST": "/recipes"}
+    }
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+@app.get("/recipes")
+async def recipes_get_info():
+    return {
+        "detail": "Use POST /recipes with JSON body and optional Bearer token.",
+        "example_body": {
+            "ingredients": ["tomato", "onion", "eggs"],
+            "servings": 2,
+            "dietary": ["vegetarian"]
+        }
+    }
 
 @app.post("/recipes", response_model=RecipeResponse, dependencies=[Depends(verify_client_token)])
 async def recipes(req: RecipeRequest):
