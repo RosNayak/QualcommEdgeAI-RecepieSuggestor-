@@ -1,11 +1,12 @@
 # QualcommEdgeAI Fridge - Smart Recipe Suggestion App
 
-##Contributors
+## Contributors
 
 - Mathew Martin (mathew.martin.0001@gmail.com)
 - Roshan Nayak (roshannayak610@gmail.com
 - Neil Noronha (nn2685@nyu.edu)
 
+## Summary
 An intelligent Android application that uses computer vision and AI to analyze refrigerator contents and suggest recipes based on available ingredients. Built with Google ML Kit, WhisperX speech recognition, and Gemini AI for recipe generation.
 
 ## Features
