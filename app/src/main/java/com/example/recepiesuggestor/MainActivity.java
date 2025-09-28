@@ -20,6 +20,7 @@ import com.example.recepiesuggestor.config.ApiKeyManager;
 import com.example.recepiesuggestor.data.IngredientAccumulator;
 import com.example.recepiesuggestor.models.ImageDescriberSingleton;
 import com.example.recepiesuggestor.services.RecipeMatchingService;
+import com.example.recepiesuggestor.services.SpeechRecognitionService;
 import com.example.recepiesuggestor.ui.CameraXController;
 import com.example.recepiesuggestor.utils.PermissionHelper;
 
@@ -29,7 +30,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements
         RecipeAdapter.OnRecipeClickListener,
-        RecipeMatchingService.RecipeUpdateListener {
+        RecipeMatchingService.RecipeUpdateListener,
+        SpeechRecognitionService.VoiceCommandListener {
 
     public static final String EXTRA_TITLE = "com.example.recepiesuggestor.EXTRA_TITLE";
     public static final String EXTRA_INGREDIENTS = "com.example.recepiesuggestor.EXTRA_INGREDIENTS";
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private CameraXController cameraController;
     private RecipeMatchingService recipeMatchingService;
+    private SpeechRecognitionService speechService;
 
     private final Handler accumulatorHandler = new Handler(Looper.getMainLooper());
     private final Runnable accumulatorPoller = new Runnable() {
@@ -85,6 +88,10 @@ public class MainActivity extends AppCompatActivity implements
         recipeMatchingService.initialize(this);
         recipeMatchingService.setRecipeUpdateListener(this);
 
+        // Initialize speech recognition service
+        speechService = SpeechRecognitionService.getInstance(this);
+        speechService.setVoiceCommandListener(this);
+
         // Check if API key is configured, prompt user if not
         checkApiKeyConfiguration();
 
@@ -103,6 +110,12 @@ public class MainActivity extends AppCompatActivity implements
         permissionHelper.ensureCameraPermission(
                 () -> cameraController.start(),
                 () -> Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show()
+        );
+
+        // Ask for microphone permission, then start speech recognition
+        permissionHelper.ensureMicrophonePermission(
+                () -> speechService.startListening(),
+                () -> Toast.makeText(this, "Microphone permission is required for voice commands", Toast.LENGTH_SHORT).show()
         );
 
         if (switchBtn != null) {
@@ -167,6 +180,17 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
+    public void onUpdateCommand() {
+        runOnUiThread(() -> {
+            Log.d("VOICE_COMMAND", "Update command received - forcing recipe refresh");
+            Toast.makeText(this, "Updating recipes...", Toast.LENGTH_SHORT).show();
+
+            // Force recipe update by calling the service directly
+            recipeMatchingService.updateRecipes(true);
+        });
+    }
+
+    @Override
     protected void onStart() {
         super.onStart();
         accumulatorHandler.post(accumulatorPoller);
@@ -176,6 +200,9 @@ public class MainActivity extends AppCompatActivity implements
     protected void onStop() {
         super.onStop();
         accumulatorHandler.removeCallbacks(accumulatorPoller);
+        if (speechService != null) {
+            speechService.stopListening();
+        }
     }
 
     private void checkApiKeyConfiguration() {

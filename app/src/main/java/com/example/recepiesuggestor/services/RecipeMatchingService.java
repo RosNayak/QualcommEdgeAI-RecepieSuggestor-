@@ -40,6 +40,10 @@ public class RecipeMatchingService implements GeminiApiService.RecipeGenerationC
     }
 
     public void updateRecipes() {
+        updateRecipes(false);
+    }
+
+    public void updateRecipes(boolean forceUpdate) {
         Set<String> availableIngredients = IngredientAccumulator.getInstance().getCurrentIngredients();
         List<String> ingredientList = new ArrayList<>(availableIngredients);
 
@@ -52,11 +56,12 @@ public class RecipeMatchingService implements GeminiApiService.RecipeGenerationC
             return;
         }
 
-        // Only call API if ingredients changed
-        if (!ingredientList.equals(lastIngredients)) {
+        // Call API if ingredients changed OR if forced
+        if (forceUpdate || !ingredientList.equals(lastIngredients)) {
             lastIngredients = new ArrayList<>(ingredientList);
 
             if (geminiService != null) {
+                Log.d("RECIPE_MATCHING", "Calling Gemini API" + (forceUpdate ? " (forced)" : ""));
                 geminiService.generateRecipes(ingredientList, this);
             }
         }
