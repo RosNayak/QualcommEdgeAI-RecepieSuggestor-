@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class GeminiApiService {
-    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent";
+    private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent";
     private static final String TAG = "GeminiApiService";
 
     public interface RecipeGenerationCallback {
@@ -69,7 +69,7 @@ public class GeminiApiService {
         StringBuilder sb = new StringBuilder();
         sb.append("Given these ingredients: ");
         sb.append(String.join(", ", ingredients));
-        sb.append("\nConsider only the food ingredients from this list.")
+        sb.append("\nConsider only the food ingredients from this list.");
         sb.append("\n\nGenerate 3-5 realistic recipes that can be made with these ingredients. ");
         sb.append("Return ONLY a JSON array with this exact format:\n");
         sb.append("[\n");

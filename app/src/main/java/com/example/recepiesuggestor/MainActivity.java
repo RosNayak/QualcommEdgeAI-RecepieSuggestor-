@@ -92,12 +92,6 @@ public class MainActivity extends AppCompatActivity implements
         // Configure API key programmatically
         ApiKeyManager.getInstance(this).storeApiKey("AIzaSyDCdr4sP3eHLvtyQ0DN8GKodwWhL5RPh4M");
 
-        // Add some test ingredients to verify system works
-        Log.d("RECIPE_INIT", "Adding test ingredients for debugging");
-        IngredientAccumulator.getInstance().addIngredientName(this, "tomatoes");
-        IngredientAccumulator.getInstance().addIngredientName(this, "basil");
-        IngredientAccumulator.getInstance().addIngredientName(this, "mozzarella");
-
         // Trigger initial recipe update to test Gemini API
         Log.d("RECIPE_INIT", "Triggering initial recipe update");
         recipeMatchingService.updateRecipes();
@@ -130,32 +124,13 @@ public class MainActivity extends AppCompatActivity implements
             switchBtn.setOnClickListener(v -> cameraController.switchCamera());
         }
 
-        // Initialize debug TextView if it exists (currently commented out in layout)
-        // tvExtractedNouns = findViewById(R.id.tv_extracted_nouns);
-        // ensure NLPTagger is initialized then extract nouns synchronously for debug
-//        new Thread(() -> {
-//            try {
-//                NLPTagger tagger = NLPTagger.get(this);
-////                tagger.init();
-////                List<String> nouns = tagger.extractNouns("fresh tomatoes basil and mozzarella cheese");
-////                String joined = nouns.toString();
-////                runOnUiThread(() -> tvExtractedNouns.setText("Nouns: " + joined));
-//            } catch (IOException e) {
-//                Log.e("NLP_DEBUG", "Failed to init NLPTagger", e);
-////                runOnUiThread(() -> tvExtractedNouns.setText("NLP init failed: " + e.getMessage()));
-//            } catch (IllegalStateException e) {
-//                Log.e("NLP_DEBUG", "NLP not initialized", e);
-////                runOnUiThread(() -> tvExtractedNouns.setText("NLP not initialized: " + e.getMessage()));
-//            }
-//        }).start();
-
-        // Also call the singleton debug logger which logs to logcat
-        ImageDescriberSingleton singleton = ImageDescriberSingleton.getInstance(this);
-        singleton.debugLogNouns("fresh tomatoes basil and mozzarella cheese");
-        // Register to receive live noun updates from image descriptions (we log them)
-        singleton.setNounsListener(nouns ->
-            Log.d("ING_LISTENER", "Received nouns: " + nouns)
-        );
+//        // Also call the singleton debug logger which logs to logcat
+//        ImageDescriberSingleton singleton = ImageDescriberSingleton.getInstance(this);
+//        singleton.debugLogNouns("fresh tomatoes basil and mozzarella cheese");
+//        // Register to receive live noun updates from image descriptions (we log them)
+//        singleton.setNounsListener(nouns ->
+//            Log.d("ING_LISTENER", "Received nouns: " + nouns)
+//        );
     }
 
     @Override
