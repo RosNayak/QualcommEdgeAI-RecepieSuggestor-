@@ -13,6 +13,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.view.PreviewView;
 import com.example.recepiesuggestor.ui.CameraXController;
 import com.example.recepiesuggestor.utils.PermissionHelper;
+import com.example.recepiesuggestor.models.ImageDescriberSingleton;
+import com.example.recepiesuggestor.models.NLPTagger;
+import android.util.Log;
+import android.widget.TextView;
+import com.example.recepiesuggestor.data.IngredientAccumulator;
+import android.os.Handler;
+import android.os.Looper;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +36,26 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.OnR
     private List<Recipe> recipeList;
 
     private CameraXController cameraController;
+    private TextView tvExtractedNouns;
+    private final Handler accumulatorHandler = new Handler(Looper.getMainLooper());
+    private final Runnable accumulatorPoller = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                java.util.Map<String,String> map = IngredientAccumulator.getInstance().getDetectedIngredientsMap();
+                StringBuilder sb = new StringBuilder();
+                sb.append("detectedIngredients = {\n");
+                for (java.util.Map.Entry<String,String> e : map.entrySet()) {
+                    sb.append("  ").append(e.getKey()).append(" : ").append(e.getValue()).append("\n");
+                }
+                sb.append("}");
+                tvExtractedNouns.setText(sb.toString());
+            } catch (Exception e) {
+                Log.e("ACC_POLL", "Failed to read accumulator", e);
+            }
+            accumulatorHandler.postDelayed(this, 1000);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +66,12 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.OnR
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Create dummy data
+//        // Create dummy data
         recipeList = new ArrayList<>();
-        recipeList.add(new Recipe("Pancakes", "Fluffy pancakes with syrup", android.R.drawable.sym_def_app_icon, "Ingredients: Flour, Eggs, Milk, Sugar, Baking Powder, Syrup", "Instructions: Mix dry ingredients. Mix wet ingredients. Combine. Cook on griddle."));
-        recipeList.add(new Recipe("Omelette", "Cheesy vegetable omelette", android.R.drawable.sym_def_app_icon, "Ingredients: Eggs, Cheese, Bell Peppers, Onions, Milk, Butter", "Instructions: Whisk eggs and milk. Sauté vegetables. Pour eggs into pan. Add cheese and vegetables. Fold and cook."));
-        recipeList.add(new Recipe("Pasta Carbonara", "Creamy pasta with bacon and eggs", android.R.drawable.sym_def_app_icon, "Ingredients: Spaghetti, Bacon, Eggs, Parmesan Cheese, Black Pepper", "Instructions: Cook spaghetti. Fry bacon. Whisk eggs and cheese. Combine all with cooked pasta."));
-        recipeList.add(new Recipe("Chicken Salad", "Healthy chicken salad with greens", android.R.drawable.sym_def_app_icon, "Ingredients: Cooked Chicken, Lettuce, Tomatoes, Cucumber, Mayonnaise, Lemon Juice", "Instructions: Chop chicken and vegetables. Mix with mayonnaise and lemon juice. Serve on lettuce."));
+//        recipeList.add(new Recipe("Pancakes", "Fluffy pancakes with syrup", android.R.drawable.sym_def_app_icon, "Ingredients: Flour, Eggs, Milk, Sugar, Baking Powder, Syrup", "Instructions: Mix dry ingredients. Mix wet ingredients. Combine. Cook on griddle."));
+//        recipeList.add(new Recipe("Omelette", "Cheesy vegetable omelette", android.R.drawable.sym_def_app_icon, "Ingredients: Eggs, Cheese, Bell Peppers, Onions, Milk, Butter", "Instructions: Whisk eggs and milk. Sauté vegetables. Pour eggs into pan. Add cheese and vegetables. Fold and cook."));
+//        recipeList.add(new Recipe("Pasta Carbonara", "Creamy pasta with bacon and eggs", android.R.drawable.sym_def_app_icon, "Ingredients: Spaghetti, Bacon, Eggs, Parmesan Cheese, Black Pepper", "Instructions: Cook spaghetti. Fry bacon. Whisk eggs and cheese. Combine all with cooked pasta."));
+//        recipeList.add(new Recipe("Chicken Salad", "Healthy chicken salad with greens", android.R.drawable.sym_def_app_icon, "Ingredients: Cooked Chicken, Lettuce, Tomatoes, Cucumber, Mayonnaise, Lemon Juice", "Instructions: Chop chicken and vegetables. Mix with mayonnaise and lemon juice. Serve on lettuce."));
 
         // Initialize and set adapter
         recipeAdapter = new RecipeAdapter(recipeList, this);
@@ -64,6 +92,47 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.OnR
         if (switchBtn != null) {
             switchBtn.setOnClickListener(v -> cameraController.switchCamera());
         }
+
+        // Temporary debug: show extracted nouns for a sample sentence and call debug logger
+        tvExtractedNouns = findViewById(R.id.tv_extracted_nouns);
+        // ensure NLPTagger is initialized then extract nouns synchronously for debug
+        new Thread(() -> {
+            try {
+                NLPTagger tagger = NLPTagger.get(this);
+                tagger.init();
+                List<String> nouns = tagger.extractNouns("fresh tomatoes basil and mozzarella cheese");
+                String joined = nouns.toString();
+                runOnUiThread(() -> tvExtractedNouns.setText("Nouns: " + joined));
+            } catch (IOException e) {
+                Log.e("NLP_DEBUG", "Failed to init NLPTagger", e);
+                runOnUiThread(() -> tvExtractedNouns.setText("NLP init failed: " + e.getMessage()));
+            } catch (IllegalStateException e) {
+                Log.e("NLP_DEBUG", "NLP not initialized", e);
+                runOnUiThread(() -> tvExtractedNouns.setText("NLP not initialized: " + e.getMessage()));
+            }
+        }).start();
+
+        // Also call the singleton debug logger which logs to logcat
+        ImageDescriberSingleton singleton = ImageDescriberSingleton.getInstance(this);
+        singleton.debugLogNouns("fresh tomatoes basil and mozzarella cheese");
+        // Register to receive live noun updates from image descriptions (we log them)
+        singleton.setNounsListener(nouns -> {
+            Log.d("ING_LISTENER", "Received nouns: " + String.valueOf(nouns));
+        });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // start polling the accumulator for live updates
+        accumulatorHandler.post(accumulatorPoller);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // stop polling when activity not visible
+        accumulatorHandler.removeCallbacks(accumulatorPoller);
     }
 
     @Override
@@ -76,10 +145,5 @@ public class MainActivity extends AppCompatActivity implements RecipeAdapter.OnR
         startActivity(intent);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // Optional: free resources when backgrounded
-        // cameraController.stop();
-    }
+    // ...existing lifecycle methods above handle stopping and cleanup
 }

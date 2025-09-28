@@ -120,6 +120,17 @@
                 android:layout_marginBottom="16dp"
                 android:gravity="center" />
 
+            <!-- Extracted nouns debug view -->
+            <TextView
+                android:id="@+id/tv_extracted_nouns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Extracted nouns will appear here (debug)"
+                android:textSize="14sp"
+                android:textColor="@android:color/black"
+                android:layout_marginBottom="8dp"
+                android:padding="8dp" />
+
             <!-- RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recycler_view"

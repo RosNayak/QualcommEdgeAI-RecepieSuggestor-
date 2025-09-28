@@ -3,19 +3,23 @@ package com.example.recepiesuggestor.data;
 import android.content.Context;
 import android.util.Log;
 import android.widget.Toast;
+import android.os.Handler;
+import android.os.Looper;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class IngredientAccumulator {
 
     private static IngredientAccumulator instance;
 
-    // Use a synchronized Set to ensure thread-safe operations
-    private final Set<String> detectedIngredients =
-            Collections.synchronizedSet(new HashSet<>());
+    // Use a synchronized LinkedHashMap to dedupe case-insensitively while
+    // preserving insertion order and the first-seen casing for display.
+    private final Map<String, String> detectedIngredients = Collections.synchronizedMap(new LinkedHashMap<>());
 
     private IngredientAccumulator() {}
 
@@ -29,9 +33,30 @@ public class IngredientAccumulator {
     public void addLabels(Context context, List<com.google.mlkit.vision.label.ImageLabel> labels) {
         for (com.google.mlkit.vision.label.ImageLabel label : labels) {
             String ingredientName = label.getText();
-            detectedIngredients.add(ingredientName);
-            Toast.makeText(context, ingredientName, Toast.LENGTH_SHORT).show();
+            addIngredientName(context, ingredientName);
         }
+    }
+
+    /** Add a single ingredient name (dedupes case-insensitively). */
+    public void addIngredientName(Context context, String ingredientName) {
+        if (ingredientName == null) return;
+        String trimmed = ingredientName.trim();
+        if (trimmed.isEmpty()) return;
+        String key = trimmed.toLowerCase(java.util.Locale.ROOT);
+        boolean added = false;
+        synchronized (detectedIngredients) {
+            if (!detectedIngredients.containsKey(key)) {
+                detectedIngredients.put(key, trimmed); // store first-seen casing
+                added = true;
+            }
+        }
+        // Do not show Toasts here — UI will poll or listen to accumulator for updates.
+    }
+
+    /** Add multiple ingredient names (dedupes case-insensitively). */
+    public void addIngredientNames(Context context, List<String> names) {
+        if (names == null || names.isEmpty()) return;
+        for (String n : names) addIngredientName(context, n);
     }
 
     /**
@@ -39,8 +64,20 @@ public class IngredientAccumulator {
      * @return A Set of ingredient names (Strings).
      */
     public Set<String> getCurrentIngredients() {
-        // Return a new HashSet based on the existing synchronized set
-        return new HashSet<>(detectedIngredients);
+        // Return a new LinkedHashSet based on the values to preserve insertion order
+        synchronized (detectedIngredients) {
+            return new java.util.LinkedHashSet<>(detectedIngredients.values());
+        }
+    }
+
+    /**
+     * Debug accessor: returns a shallow copy of the internal map used for deduplication.
+     * Key = normalized lowercase form, Value = first-seen casing.
+     */
+    public java.util.Map<String, String> getDetectedIngredientsMap() {
+        synchronized (detectedIngredients) {
+            return new java.util.LinkedHashMap<>(detectedIngredients);
+        }
     }
 
     /**

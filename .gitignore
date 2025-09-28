@@ -31,3 +31,7 @@ gradle/wrapper/gradle-wrapper.properties
 # IDE specific files
 .idea/gradle.xml
 .idea/misc.xml.idea/
+
+# Assets files
+app/src/main/assets
+**/assets/
