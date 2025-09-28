@@ -61,7 +61,7 @@ async def recipes_get_info():
 
 @app.post("/recipes", response_model=RecipeResponse, dependencies=[Depends(verify_client_token)])
 async def recipes(req: RecipeRequest):
-    result = await recipes_from_gemini(req.ingredients, req.servings, req.dietary)
+    result = await recipes_from_gemini(req.ingredients)
     return RecipeResponse(
         recipes=[Recipe(**r) for r in result["recipes"]],
         model=result["model"],
