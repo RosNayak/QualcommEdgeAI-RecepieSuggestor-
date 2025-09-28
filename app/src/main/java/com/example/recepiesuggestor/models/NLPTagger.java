@@ -61,19 +61,37 @@ public final class NLPTagger {
         tokenizer = SimpleTokenizer.INSTANCE;
         // Try multiple model files present in assets
         POSModel posModel = null;
+        String loadedFrom = null;
         for (String p : POS_MODEL_ASSET_PATHS) {
             try (InputStream in = appContext.getAssets().open(p)) {
                 posModel = new POSModel(in);
+                loadedFrom = p;
                 break;
-            } catch (IOException ignored) {
+            } catch (IOException ioe) {
+                android.util.Log.d("NLP_INIT", "Could not open asset '" + p + "': " + ioe.getMessage());
                 // try next
             }
         }
         if (posModel != null) {
             posTagger = new POSTaggerME(posModel);
-            android.util.Log.d("NLP_INIT", "Loaded POS model and initialized POSTaggerME");
+            android.util.Log.d("NLP_INIT", "Loaded POS model from asset: " + loadedFrom);
         } else {
             android.util.Log.d("NLP_INIT", "No POS model found in assets: tried " + java.util.Arrays.toString(POS_MODEL_ASSET_PATHS));
+        }
+    }
+
+    /** Returns true if a POS model was successfully loaded and POSTaggerME initialized. */
+    public boolean hasPosModel() {
+        return posTagger != null;
+    }
+
+    /** Debug helper: list files in the app assets folder (logs to Logcat). */
+    public void logAvailableAssets() {
+        try {
+            String[] list = appContext.getAssets().list("");
+            android.util.Log.d("NLP_INIT", "Assets in APK root: " + java.util.Arrays.toString(list));
+        } catch (IOException e) {
+            android.util.Log.e("NLP_INIT", "Failed to list assets", e);
         }
     }
 
@@ -81,11 +99,12 @@ public final class NLPTagger {
     @NonNull
     public List<String> extractNouns(@NonNull String text) {
         if (text.isEmpty()) return new ArrayList<>();
-        if (tokenizer == null || posTagger == null) {
-            throw new IllegalStateException("NLP not initialized. Call NLPTagger.init() first.");
+        // Ensure tokenizer is available; POS model is optional (we'll gracefully fall back)
+        if (tokenizer == null) {
+            tokenizer = SimpleTokenizer.INSTANCE;
         }
 
-        // Try POS tagging first
+        // Try POS tagging first when available
         Set<String> nouns = new LinkedHashSet<>();
         try {
             if (posTagger != null) {
@@ -100,6 +119,9 @@ public final class NLPTagger {
                         nouns.add(tokens[i]);
                     }
                 }
+            } else {
+                // No POS model available — log and continue to heuristics below
+                android.util.Log.d("NLP_TAGGER", "POS model not available, skipping POS tagging and using heuristics");
             }
         } catch (Exception e) {
             // ignore and fall through to heuristics
@@ -107,14 +129,14 @@ public final class NLPTagger {
 
         // If POS tagging found no nouns, try improved strategies:
         if (nouns.isEmpty()) {
-            // Strategy 1: prepend a short context sentence to help the tagger
-            String cleaned = text == null ? "" : text.trim();
-            if (!cleaned.endsWith(".") && !cleaned.endsWith("!") && !cleaned.endsWith("?")) {
-                cleaned = cleaned + ".";
-            }
-            String prefixed = "The image contains " + cleaned;
-            try {
-                if (posTagger != null) {
+            // Strategy 1: if we have a POS model, prepend a short context sentence to help the tagger
+            if (posTagger != null) {
+                String cleaned = text == null ? "" : text.trim();
+                if (!cleaned.endsWith(".") && !cleaned.endsWith("!") && !cleaned.endsWith("?")) {
+                    cleaned = cleaned + ".";
+                }
+                String prefixed = "The image contains " + cleaned;
+                try {
                     String[] tokens = tokenizer.tokenize(prefixed);
                     String[] tags;
                     synchronized (posLock) {
@@ -126,8 +148,8 @@ public final class NLPTagger {
                             nouns.add(tokens[i]);
                         }
                     }
-                }
-            } catch (Exception ignored) {}
+                } catch (Exception ignored) {}
+            }
         }
 
         // Final heuristic fallback: split on conjunctions and separators and filter stopwords

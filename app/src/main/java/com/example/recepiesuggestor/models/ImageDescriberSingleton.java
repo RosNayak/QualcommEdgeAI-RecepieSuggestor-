@@ -55,11 +55,22 @@ public class ImageDescriberSingleton {
         imageDescriber = ImageDescription.getClient(options);
         activityContext = context;
 
+        // Log available assets and initialize NLPTagger on a background thread so
+        // extraction calls don't hit an uninitialized state at runtime.
         try {
-            // Delegate initialization to NLPTagger which handles assets and threading
-            com.example.recepiesuggestor.models.NLPTagger.get(context).init();
+            com.example.recepiesuggestor.models.NLPTagger tagger = com.example.recepiesuggestor.models.NLPTagger.get(context);
+            // Log what's packaged so we can see if POS models are present at runtime
+            tagger.logAvailableAssets();
+            // Initialize on a background thread (init is idempotent)
+            new Thread(() -> {
+                try {
+                    tagger.init();
+                } catch (Exception e) {
+                    Log.e("NLP_INIT", "Background init failed", e);
+                }
+            }).start();
         } catch (Exception e) {
-            Log.e("NLP_INIT", "Error initializing NLPTagger", e);
+            Log.e("NLP_INIT", "Error scheduling NLPTagger init", e);
         }
     }
 
