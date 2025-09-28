@@ -12,7 +12,12 @@
       "Bash(python:*)",
       "Bash(curl http://localhost:5001/health)",
       "Bash(adb shell am force-stop:*)",
-      "Bash(adb shell pm clear:*)"
+      "Bash(adb shell pm clear:*)",
+      "Bash(find:*)",
+      "Bash(curl:*)",
+      "Bash(adb shell:*)",
+      "Bash(adb forward:*)",
+      "Bash(adb reverse:*)"
     ],
     "deny": [],
     "ask": []

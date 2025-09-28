@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -57,8 +58,8 @@ public class MainActivity extends AppCompatActivity implements
                 sb.append("}");
                 Log.d("INGREDIENTS_DEBUG", sb.toString());
 
-                // Update recipes based on current ingredients
-                recipeMatchingService.updateRecipes();
+                // Note: Recipes only update when user says "Update" voice command
+                // Automatic recipe updates disabled - ingredients tracked but not triggering recipe refresh
             } catch (Exception e) {
                 Log.e("ACC_POLL", "Failed to read accumulator", e);
             }
@@ -92,9 +93,8 @@ public class MainActivity extends AppCompatActivity implements
         // Configure API key programmatically
         ApiKeyManager.getInstance(this).storeApiKey("AIzaSyDCdr4sP3eHLvtyQ0DN8GKodwWhL5RPh4M");
 
-        // Trigger initial recipe update to test Gemini API
-        Log.d("RECIPE_INIT", "Triggering initial recipe update");
-        recipeMatchingService.updateRecipes();
+        // Recipe updates disabled on app start - only triggered by "Update" voice command
+        Log.d("RECIPE_INIT", "App initialized - say 'Update' to generate recipes");
 
         PreviewView previewView = findViewById(R.id.camera_preview);
         ImageButton switchBtn = findViewById(R.id.btn_switch_camera);
@@ -116,12 +116,28 @@ public class MainActivity extends AppCompatActivity implements
                 },
                 () -> {
                     Log.w("VOICE_COMMANDS", "Microphone permission denied - voice commands disabled");
-                    Toast.makeText(this, "Voice commands disabled - recipes will still update automatically", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Voice commands disabled - say 'Update' manually to refresh recipes", Toast.LENGTH_SHORT).show();
                 }
         );
 
         if (switchBtn != null) {
             switchBtn.setOnClickListener(v -> cameraController.switchCamera());
+        }
+
+        // Test button to manually trigger recipe generation (bypasses voice command issues)
+        Button testRecipesBtn = findViewById(R.id.btn_test_recipes);
+        if (testRecipesBtn != null) {
+            testRecipesBtn.setOnClickListener(v -> {
+                Log.d("TEST_BUTTON", "Test Recipes button clicked - manually triggering recipe update");
+                Toast.makeText(this, "Manually updating recipes...", Toast.LENGTH_SHORT).show();
+
+                try {
+                    recipeMatchingService.updateRecipes(true);
+                } catch (Exception e) {
+                    Log.e("TEST_BUTTON", "Failed to update recipes via test button", e);
+                    Toast.makeText(this, "Failed to update recipes", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
 //        // Also call the singleton debug logger which logs to logcat
@@ -165,8 +181,8 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onUpdateCommand() {
         runOnUiThread(() -> {
-            Log.d("VOICE_COMMAND", "Update command received - forcing recipe refresh");
-            Toast.makeText(this, "Updating recipes...", Toast.LENGTH_SHORT).show();
+            Log.d("VOICE_COMMAND", "Update command received from SpeechRecognitionService - forcing recipe refresh");
+            Toast.makeText(this, "Voice command detected: Updating recipes...", Toast.LENGTH_SHORT).show();
 
             // Store current recipes as backup in case API fails
             List<Recipe> currentRecipes = new ArrayList<>(recipeList);
@@ -176,7 +192,6 @@ public class MainActivity extends AppCompatActivity implements
                 recipeMatchingService.updateRecipes(true);
             } catch (Exception e) {
                 Log.e("VOICE_COMMAND", "Failed to update recipes via voice command", e);
-                Toast.makeText(this, "Recipe update failed - keeping current recipes", Toast.LENGTH_SHORT).show();
                 // Keep current recipes if update fails
             }
         });

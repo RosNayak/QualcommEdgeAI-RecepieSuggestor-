@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class WhisperApiService {
-    private static final String WHISPERX_SERVER_URL = "http://10.0.2.2:5001/command"; // Android emulator localhost
+    private static final String WHISPERX_SERVER_URL = "http://localhost:5001/command"; // Use localhost with adb reverse port forwarding
     private static final String TAG = "WhisperXService";
 
     public interface TranscriptionCallback {

@@ -31,28 +31,53 @@
             android:layout_gravity="top"
             android:orientation="horizontal"
             android:padding="16dp"
-            android:gravity="end">
+            android:gravity="center_vertical">
 
-            <ImageButton
-                android:id="@+id/btn_switch_camera"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_rotate"
-                android:contentDescription="Switch Camera"
-                android:layout_marginEnd="8dp"
-                android:padding="8dp"
-                android:scaleType="fitCenter" />
+            <!-- Temporary test button -->
+            <Button
+                android:id="@+id/btn_test_recipes"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Test Recipes"
+                android:textSize="12sp"
+                android:background="@android:color/holo_green_dark"
+                android:textColor="@android:color/white"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp" />
 
-            <ImageButton
-                android:id="@+id/btn_flash"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:src="@android:drawable/ic_menu_gallery"
-                android:contentDescription="Toggle Flash"
-                android:padding="8dp"
-                android:scaleType="fitCenter" />
+            <!-- Spacer to push camera controls to the right -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btn_switch_camera"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_rotate"
+                    android:contentDescription="Switch Camera"
+                    android:layout_marginEnd="8dp"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter" />
+
+                <ImageButton
+                    android:id="@+id/btn_flash"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:contentDescription="Toggle Flash"
+                    android:padding="8dp"
+                    android:scaleType="fitCenter" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

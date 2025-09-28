@@ -115,7 +115,10 @@ public class SpeechRecognitionService implements WhisperApiService.Transcription
 
             // Process the recorded audio
             if (totalBytes > 0) {
+                Log.d(TAG, "Recorded " + totalBytes + " bytes of audio, sending to WhisperX for transcription");
                 whisperService.transcribeAudio(audioFile, this);
+            } else {
+                Log.w(TAG, "No audio data recorded");
             }
 
         } catch (IOException e) {

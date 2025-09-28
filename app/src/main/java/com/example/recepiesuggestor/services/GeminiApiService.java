@@ -67,11 +67,14 @@ public class GeminiApiService {
 
     private String buildPrompt(List<String> ingredients) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Given these ingredients: ");
+        sb.append("Given these detected items: ");
         sb.append(String.join(", ", ingredients));
-        sb.append("\nConsider only the food ingredients from this list.");
-        sb.append("\n\nGenerate 3-5 realistic recipes that can be made with these ingredients. ");
-        sb.append("Return ONLY a JSON array with this exact format:\n");
+        sb.append("\n\nIMPORTANT: Only consider items that are FOOD INGREDIENTS. ");
+        sb.append("Ignore all non-food items including: people, body parts, clothing, shoes, furniture, background objects, surfaces, materials, and any other non-edible items. ");
+        sb.append("Focus only on actual food items like vegetables, fruits, meat, dairy, spices, etc.");
+        sb.append("\n\nFrom the actual food ingredients identified, generate 3-5 realistic recipes. ");
+        sb.append("If no food ingredients are found, return an empty array [].");
+        sb.append("\n\nReturn ONLY a JSON array with this exact format:\n");
         sb.append("[\n");
         sb.append("  {\n");
         sb.append("    \"title\": \"Recipe Name\",\n");
