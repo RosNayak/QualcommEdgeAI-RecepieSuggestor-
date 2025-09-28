@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.recepiesuggestor"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -67,5 +67,11 @@ dependencies {
     //google ml kit
 //    implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
     implementation("com.google.mlkit:image-labeling:17.0.9")
+    implementation("com.google.mlkit:genai-image-description:1.0.0-beta1")
+    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+
+    //tflite
+    implementation("org.tensorflow:tensorflow-lite:2.15.0") // Use latest stable version
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4") // Utilities for image/tensor handling
 
 }
