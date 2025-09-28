@@ -193,6 +193,9 @@ accumulatorHandler.postDelayed(this, 2000); // 2-second polling
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## APK Link
+https://drive.google.com/file/d/19DC5NtdKM5_XFdeCP0JIHpTeeoW8BNFb/view?usp=drive_link
+
 ## Acknowledgments
 
 - **Google ML Kit** for computer vision capabilities
