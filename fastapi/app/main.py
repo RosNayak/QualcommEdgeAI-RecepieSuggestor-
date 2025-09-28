@@ -47,15 +47,13 @@ async def recipes_get_info():
     return {
         "detail": "Use POST /recipes with JSON body and optional Bearer token.",
         "example_body": {
-            "ingredients": ["tomato", "onion", "eggs"],
-            "servings": 2,
-            "dietary": ["vegetarian"]
+            "ingredients": ["tomato", "onion", "eggs"]
         }
     }
 
 @app.post("/recipes", response_model=RecipeResponse, dependencies=[Depends(verify_client_token)])
 async def recipes(req: RecipeRequest):
-    result = await recipes_from_gemini(req.ingredients, req.servings, req.dietary)
+    result = await recipes_from_gemini(req.ingredients)
     return RecipeResponse(
         recipes=[Recipe(**r) for r in result["recipes"]],
         model=result["model"],
