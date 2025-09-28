@@ -1,25 +1,22 @@
 package com.example.recepiesuggestor.data;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.Toast;
-import android.os.Handler;
-import android.os.Looper;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.List;
 
 public class IngredientAccumulator {
 
     private static IngredientAccumulator instance;
 
-    // Use a synchronized LinkedHashMap to dedupe case-insensitively while
-    // preserving insertion order and the first-seen casing for display.
-    private final Map<String, String> detectedIngredients = Collections.synchronizedMap(new LinkedHashMap<>());
+    // Use a synchronized Set to ensure thread-safe operations
+    private final Map<String, String> detectedIngredients =
+            Collections.synchronizedMap(new LinkedHashMap<>());
 
     private IngredientAccumulator() {}
 
@@ -30,14 +27,13 @@ public class IngredientAccumulator {
         return instance;
     }
 
-    public void addLabels(Context context, List<com.google.mlkit.vision.label.ImageLabel> labels) {
-        for (com.google.mlkit.vision.label.ImageLabel label : labels) {
-            String ingredientName = label.getText();
-            addIngredientName(context, ingredientName);
-        }
-    }
+//    public void addLabels(Context context, List<com.google.mlkit.vision.label.ImageLabel> labels) {
+//        for (com.google.mlkit.vision.label.ImageLabel label : labels) {
+//            String ingredientName = label.getText();
+//            detectedIngredients.add(ingredientName);
+//        }
+//    }
 
-    /** Add a single ingredient name (dedupes case-insensitively). */
     public void addIngredientName(Context context, String ingredientName) {
         if (ingredientName == null) return;
         String trimmed = ingredientName.trim();
@@ -64,16 +60,12 @@ public class IngredientAccumulator {
      * @return A Set of ingredient names (Strings).
      */
     public Set<String> getCurrentIngredients() {
-        // Return a new LinkedHashSet based on the values to preserve insertion order
+        // Return a new HashSet based on the existing synchronized set
         synchronized (detectedIngredients) {
             return new java.util.LinkedHashSet<>(detectedIngredients.values());
         }
     }
 
-    /**
-     * Debug accessor: returns a shallow copy of the internal map used for deduplication.
-     * Key = normalized lowercase form, Value = first-seen casing.
-     */
     public java.util.Map<String, String> getDetectedIngredientsMap() {
         synchronized (detectedIngredients) {
             return new java.util.LinkedHashMap<>(detectedIngredients);

@@ -28,15 +28,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = true
-    }
-    packagingOptions {
-        resources {
-            excludes += setOf("META-INF/DEPENDENCIES", "META-INF/LICENSE", "META-INF/LICENSE.txt", "META-INF/NOTICE")
-        }
     }
 }
-
 
 dependencies {
 
@@ -68,24 +61,15 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:$camerax_version")
     implementation("androidx.camera:camera-view:$camerax_version") // PreviewView
 
-    // Recycleriew
+//    Recycleriew
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
-    // google ml kit
-    // implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
+    //google ml kit
+//    implementation("com.google.android.gms:play-services-mlkit-image-labeling:16.0.8")
     implementation("com.google.mlkit:image-labeling:17.0.9")
     implementation("com.google.mlkit:genai-image-description:1.0.0-beta1")
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
-    //tflite
-    implementation("org.tensorflow:tensorflow-lite:2.15.0") // Use latest stable version
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4") // Utilities for image/tensor handling
-
-    // POS tagging - use a Java 8 / Android friendly OpenNLP release
-    // Newer 2.x releases target newer Java versions and pull in dependencies
-    // that can break D8/desugaring on Android. Downgrade to 1.9.4 which
-    // is known to work well on Android or shade the library.
     implementation("org.apache.opennlp:opennlp-tools:1.9.4")
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4") // Or the latest version
-
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }

@@ -3,10 +3,9 @@ package com.example.recepiesuggestor.models;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
-import android.widget.Toast;
-
 import androidx.camera.core.ImageProxy;
 
+import com.example.recepiesuggestor.data.IngredientAccumulator;
 import com.google.mlkit.genai.common.DownloadCallback;
 import com.google.mlkit.genai.common.FeatureStatus;
 import com.google.mlkit.genai.imagedescription.ImageDescriber;
@@ -15,18 +14,9 @@ import com.google.mlkit.genai.imagedescription.ImageDescription;
 import com.google.mlkit.genai.imagedescription.ImageDescriptionRequest;
 import com.google.mlkit.genai.common.GenAiException;
 
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
-import com.example.recepiesuggestor.data.IngredientAccumulator;
-
-// for POS tagging
-import opennlp.tools.postag.POSModel;
-import opennlp.tools.postag.POSTaggerME;
-import opennlp.tools.tokenize.SimpleTokenizer;
-
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class ImageDescriberSingleton {
     // 1. The single instance of the class
@@ -36,8 +26,6 @@ public class ImageDescriberSingleton {
 
     private final ImageDescriber imageDescriber;
 
-    // Use NLPTagger singleton for POS tagging (ensures single place for model init)
-    // Listener for live noun updates
     public interface NounsListener {
         void onNouns(List<String> nouns);
     }
@@ -55,22 +43,11 @@ public class ImageDescriberSingleton {
         imageDescriber = ImageDescription.getClient(options);
         activityContext = context;
 
-        // Log available assets and initialize NLPTagger on a background thread so
-        // extraction calls don't hit an uninitialized state at runtime.
         try {
-            com.example.recepiesuggestor.models.NLPTagger tagger = com.example.recepiesuggestor.models.NLPTagger.get(context);
-            // Log what's packaged so we can see if POS models are present at runtime
-            tagger.logAvailableAssets();
-            // Initialize on a background thread (init is idempotent)
-            new Thread(() -> {
-                try {
-                    tagger.init();
-                } catch (Exception e) {
-                    Log.e("NLP_INIT", "Background init failed", e);
-                }
-            }).start();
+            // Delegate initialization to NLPTagger which handles assets and threading
+            com.example.recepiesuggestor.models.NLPTagger.get(context).init();
         } catch (Exception e) {
-            Log.e("NLP_INIT", "Error scheduling NLPTagger init", e);
+            Log.e("NLP_INIT", "Error initializing NLPTagger", e);
         }
     }
 
@@ -82,19 +59,18 @@ public class ImageDescriberSingleton {
         return instance;
     }
 
-    public void setNounsListener(NounsListener listener) {
-        this.nounsListener = listener;
+    public void setNounsListener(NounsListener nounsListener) {
+        this.nounsListener = nounsListener;
     }
 
     public void prepareAndStartImageDescription(
             Bitmap bitmap,
             ImageProxy imageProxy
     ) throws ExecutionException, InterruptedException {
-        // Check feature availability, status will be one of the following:
-        // UNAVAILABLE, DOWNLOADABLE, DOWNLOADING, AVAILABLE
         try {
             int featureStatus = imageDescriber.checkFeatureStatus().get();
             if (featureStatus == FeatureStatus.DOWNLOADABLE) {
+
                 imageDescriber.downloadFeature(new DownloadCallback() {
                     @Override
                     public void onDownloadCompleted() {
@@ -102,26 +78,44 @@ public class ImageDescriberSingleton {
                     }
 
                     @Override
-                    public void onDownloadFailed(GenAiException e) { imageProxy.close();
-                        Log.d("ingredients", "I am failed");}
+                    public void onDownloadFailed(GenAiException e) {}
 
                     @Override
-                    public void onDownloadProgress(long totalBytesDownloaded) { Log.d("ingredients", "I am progress " + Long.toString(totalBytesDownloaded));}
+                    public void onDownloadProgress(long totalBytesDownloaded) {}
 
                     @Override
-                    public void onDownloadStarted(long bytesDownloaded) {Log.d("ingredients", "I am started");}
+                    public void onDownloadStarted(long bytesDownloaded) {}
                 });
             } else if (featureStatus == FeatureStatus.DOWNLOADING) {
                 startImageDescriptionRequest(bitmap, imageProxy);
             } else if (featureStatus == FeatureStatus.AVAILABLE) {
                 startImageDescriptionRequest(bitmap, imageProxy);
             } else if (featureStatus == FeatureStatus.UNAVAILABLE) {
-                imageProxy.close();
+                //imageProxy.close();
             }
         } catch (ExecutionException | InterruptedException e) {
-            imageProxy.close();
+//            imageProxy.close();
         }
     }
+
+//    public void startImageDescriptionRequest(
+//            Bitmap bitmap,
+//            ImageProxy imageProxy
+//    ) {
+//        // Create task request
+//        ImageDescriptionRequest imageDescriptionRequest =
+//                ImageDescriptionRequest.builder(bitmap).build();
+//
+//        // Start image description request with streaming response
+//        imageDescriber.runInference(imageDescriptionRequest, newText -> {
+////            Log.d("ingredients", newText);
+//
+//
+//
+//            //imageProxy.close();
+//        });
+//
+//    }
 
     public void startImageDescriptionRequest(
             Bitmap bitmap,
@@ -147,7 +141,6 @@ public class ImageDescriberSingleton {
                     IngredientAccumulator.getInstance().addIngredientNames(activityContext, nouns);
                 }
             } catch (Exception e) {
-                Log.e("ING_ACC", "Failed to add nouns to IngredientAccumulator", e);
             }
 
             // Retrieve the cumulative (aggregated) set and log that so the log shows history
@@ -167,8 +160,25 @@ public class ImageDescriberSingleton {
                 h.post(() -> nounsListener.onNouns(finalNouns));
             }
 
-            imageProxy.close();
+//            imageProxy.close();
         });
+    }
+
+    private List<String> extractNouns(String text) {
+        // Delegate to NLPTagger for extraction. Return empty list on failure.
+        try {
+            com.example.recepiesuggestor.models.NLPTagger tagger = com.example.recepiesuggestor.models.NLPTagger.get(activityContext);
+            // Ensure initialized (NLPTagger.init() is idempotent)
+            try {
+                tagger.init();
+            } catch (Exception ignored) {
+                // init may have already been called or fail; extractNouns will throw if not ready
+            }
+            return tagger.extractNouns(text);
+        } catch (Exception e) {
+            Log.e("NLP_EXTRACT", "Failed to extract nouns", e);
+            return new ArrayList<>();
+        }
     }
 
     // Lightweight fallback extractor: split on non-letters, remove stopwords, dedupe
@@ -243,34 +253,10 @@ public class ImageDescriberSingleton {
         return nouns;
     }
 
-
-    private List<String> extractNouns(String text) {
-        // Delegate to NLPTagger for extraction. Return empty list on failure.
-        try {
-            com.example.recepiesuggestor.models.NLPTagger tagger = com.example.recepiesuggestor.models.NLPTagger.get(activityContext);
-            // Ensure initialized (NLPTagger.init() is idempotent)
-            try {
-                tagger.init();
-            } catch (Exception ignored) {
-                // init may have already been called or fail; extractNouns will throw if not ready
-            }
-            return tagger.extractNouns(text);
-        } catch (Exception e) {
-            Log.e("NLP_EXTRACT", "Failed to extract nouns", e);
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Debug helper: run the POS extractor on arbitrary text and log the nouns.
-     * Call from an Activity or any Context-aware place via
-     * ImageDescriberSingleton.getInstance(context).debugLogNouns("text to analyze");
-     */
     public void debugLogNouns(String text) {
         List<String> nouns = extractNouns(text);
+//        Log.d("ingredients_nouns", "Debug Nouns: " + nouns.toString());
     }
-
-
 
     // Optional: Close the labeler when the app shuts down (e.g., in onDestroy)
     public void close() {
