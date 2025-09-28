@@ -56,14 +56,17 @@ public class RecipeMatchingService implements GeminiApiService.RecipeGenerationC
             return;
         }
 
-        // Call API if ingredients changed OR if forced
-        if (forceUpdate || !ingredientList.equals(lastIngredients)) {
+        // Only call API when explicitly forced (voice command "Update")
+        // Automatic updates on ingredient changes disabled
+        if (forceUpdate) {
             lastIngredients = new ArrayList<>(ingredientList);
 
             if (geminiService != null) {
-                Log.d("RECIPE_MATCHING", "Calling Gemini API" + (forceUpdate ? " (forced)" : ""));
+                Log.d("RECIPE_MATCHING", "Calling Gemini API (forced by voice command)");
                 geminiService.generateRecipes(ingredientList, this);
             }
+        } else {
+            Log.d("RECIPE_MATCHING", "Skipping API call - only updating on voice command");
         }
     }
 
@@ -83,13 +86,6 @@ public class RecipeMatchingService implements GeminiApiService.RecipeGenerationC
         // Don't clear recipes on API errors - keep existing ones
         Log.w("RECIPE_MATCHING", "Keeping existing recipes due to API error: " + error);
 
-        // Show user-friendly error message
-        if (context != null) {
-            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
-                android.widget.Toast.makeText(context,
-                    "Recipe update failed - keeping current recipes",
-                    android.widget.Toast.LENGTH_SHORT).show();
-            });
-        }
+        // Error logged but no toast shown to user
     }
 }
