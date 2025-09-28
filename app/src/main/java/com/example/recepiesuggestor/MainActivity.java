@@ -10,14 +10,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.camera.view.PreviewView;
 
 import com.example.recepiesuggestor.config.ApiKeyManager;
 import com.example.recepiesuggestor.data.IngredientAccumulator;
-import com.example.recepiesuggestor.models.ImageDescriberSingleton;
 import com.example.recepiesuggestor.services.RecipeMatchingService;
 import com.example.recepiesuggestor.services.SpeechRecognitionService;
 import com.example.recepiesuggestor.ui.CameraXController;
@@ -97,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements
         Log.d("RECIPE_INIT", "App initialized - say 'Update' to generate recipes");
 
         PreviewView previewView = findViewById(R.id.camera_preview);
-        ImageButton switchBtn = findViewById(R.id.btn_switch_camera);
+//        ImageButton switchBtn = findViewById(R.id.btn_switch_camera);
 
         cameraController = new CameraXController(this, previewView);
         PermissionHelper permissionHelper = new PermissionHelper(this);
@@ -120,10 +118,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
         );
 
-        if (switchBtn != null) {
-            switchBtn.setOnClickListener(v -> cameraController.switchCamera());
-        }
-
         // Test button to manually trigger recipe generation (bypasses voice command issues)
         Button testRecipesBtn = findViewById(R.id.btn_test_recipes);
         if (testRecipesBtn != null) {
@@ -139,14 +133,6 @@ public class MainActivity extends AppCompatActivity implements
                 }
             });
         }
-
-//        // Also call the singleton debug logger which logs to logcat
-//        ImageDescriberSingleton singleton = ImageDescriberSingleton.getInstance(this);
-//        singleton.debugLogNouns("fresh tomatoes basil and mozzarella cheese");
-//        // Register to receive live noun updates from image descriptions (we log them)
-//        singleton.setNounsListener(nouns ->
-//            Log.d("ING_LISTENER", "Received nouns: " + nouns)
-//        );
     }
 
     @Override
