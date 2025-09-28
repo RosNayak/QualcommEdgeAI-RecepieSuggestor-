@@ -1,4 +1,4 @@
-# QualcommEdgeAI Fridge - Smart Recipe Suggestion App
+# FridgeChef- Smart Recipe Suggestion App
 
 ## Contributors
 
