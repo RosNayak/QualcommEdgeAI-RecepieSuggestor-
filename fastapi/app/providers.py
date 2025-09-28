@@ -32,7 +32,7 @@ async def recipes_from_gemini(ingredients: List[str], servings: int, dietary: Li
         # Surface a clear error to the client instead of a generic 500
         raise HTTPException(status_code=503, detail="Server is missing GEMINI_API_KEY")
 
-    prompt = build_prompt(ingredients, servings, dietary)
+    prompt = build_prompt(ingredients)
     payload = {
         "contents": [
             {
