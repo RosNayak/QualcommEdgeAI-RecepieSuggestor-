@@ -5,7 +5,7 @@ FridgeChef: Voice- and Camera-Controlled Real-time Recipe Suggestion
 ## Project Overview
 The Recipe Suggestor project is an intelligent Android application that leverages on-device machine learning to identify fruits and vegetables in real time and generate recipe suggestions tailored to the detected ingredients.
 
-##Motivation
+## Motivation
 Consumers often have ingredients at home but struggle to decide what meals they can prepare. Traditional recipe apps require manual input of items, which is time-consuming and error-prone. By automatically recognizing ingredients from a phone camera, Recipe Suggestor reduces friction, empowers healthier eating habits, and showcases the potential of on-device AI.
 
 ## Key Features
