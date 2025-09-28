@@ -1,4 +1,4 @@
-# FridgeChef- Smart Recipe Suggestion App
+# FridgeChef: AI-Powered Recipe Discovery Through Computer Vision
 
 ## Contributors
 
@@ -105,7 +105,7 @@ implementation("com.google.android.material:material:1.8.0")
 
 1. **Launch App**: Open the app and grant camera/microphone permissions
 2. **Point Camera**: Aim at refrigerator contents or ingredients
-3. **Voice Command**: Say "Update" to generate recipes
+3. **Voice Command**: Say "Test Recipes" to generate recipes
 4. **Browse Recipes**: Scroll through suggested recipes
 5. **View Details**: Tap recipes for detailed instructions
 
@@ -170,7 +170,7 @@ accumulatorHandler.postDelayed(this, 2000); // 2-second polling
 
 ### Current Benchmarks
 
-- **APK Size**: 47MB (optimized with ProGuard)
+- **APK Size**: 33MB (optimized with ProGuard)
 - **Frame Processing**: Every 8th frame (~3.75 FPS at 30 FPS input)
 - **Memory Usage**: ~150MB average during operation
 - **Cold Start**: ~2-3 seconds app launch time
