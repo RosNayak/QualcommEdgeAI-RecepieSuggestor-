@@ -70,4 +70,6 @@ dependencies {
     implementation("com.google.mlkit:genai-image-description:1.0.0-beta1")
     implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
 
+    implementation("org.apache.opennlp:opennlp-tools:1.9.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
