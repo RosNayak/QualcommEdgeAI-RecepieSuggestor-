@@ -10,8 +10,6 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 
 import com.example.recepiesuggestor.models.ImageDescriberSingleton;
-import com.example.recepiesuggestor.models.ImageLabelerSingleton;
-import com.google.mlkit.vision.common.InputImage;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -20,41 +18,26 @@ import java.util.concurrent.Executors;
 @androidx.camera.core.ExperimentalGetImage
 public class ImageAnalyzer implements ImageAnalysis.Analyzer {
 
-    private final ImageLabelerSingleton imageLabelerSingleton;
+    private final long SKIP_FRAMES = 4; // To process every 4th frame (0, 4, 8, ...)
+    private long frameCount = 0; // Starts at 0
+
     private final ImageDescriberSingleton imageDescriberSingleton;
     private final ExecutorService analysisExecutor = Executors.newSingleThreadExecutor();
 
     public ImageAnalyzer(Context context) {
-        imageLabelerSingleton = ImageLabelerSingleton.getInstance(context);
         imageDescriberSingleton = ImageDescriberSingleton.getInstance(context);
     }
 
     public void analyze(@NonNull ImageProxy imageProxy) {
         Image mediaImage = imageProxy.getImage();
 
-        if (mediaImage != null) {
-            InputImage image =
-                    InputImage.fromMediaImage(mediaImage, imageProxy.getImageInfo().getRotationDegrees());
-//            Log.d("ingredients", image.toString());
-            Bitmap bitmap = ImageUtils.bitmapFromImageProxy(imageProxy);
-//            imageLabelerSingleton.processImage(image, imageProxy);
-//            try {
-//                imageDescriberSingleton.prepareAndStartImageDescription(bitmap, imageProxy);
-//            } catch (ExecutionException e) {
-//                throw new RuntimeException(e);
-//            } catch (InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
+        if (mediaImage != null && frameCount % SKIP_FRAMES != 0) {
 
             analysisExecutor.execute(() -> {
                 try {
-                    // This is the call that contains the potentially blocking checkFeatureStatus().get().
-                    // It runs on the separate analysisExecutor thread, preventing the camera preview freeze.
+                    Bitmap bitmap = ImageUtils.bitmapFromImageProxy(imageProxy);
+                    imageProxy.close();
                     imageDescriberSingleton.prepareAndStartImageDescription(bitmap, imageProxy);
-
-                    // IMPORTANT: The ImageDescriberSingleton is now responsible for calling
-                    // imageProxy.close() inside its success and failure callbacks.
-
                 } catch (ExecutionException e) {
                     // Handle exceptions thrown by the synchronous part of the Describer setup.
                     Log.e("ingredients", "Describer setup failed due to ExecutionException. Closing proxy.", e);
@@ -73,5 +56,7 @@ public class ImageAnalyzer implements ImageAnalysis.Analyzer {
         } else {
             imageProxy.close();
         }
+
+        frameCount += 1;
     }
 }

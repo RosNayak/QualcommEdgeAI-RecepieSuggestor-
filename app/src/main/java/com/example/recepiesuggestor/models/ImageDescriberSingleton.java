@@ -3,8 +3,6 @@ package com.example.recepiesuggestor.models;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
-import android.widget.Toast;
-
 import androidx.camera.core.ImageProxy;
 
 import com.google.mlkit.genai.common.DownloadCallback;
@@ -14,9 +12,7 @@ import com.google.mlkit.genai.imagedescription.ImageDescriberOptions;
 import com.google.mlkit.genai.imagedescription.ImageDescription;
 import com.google.mlkit.genai.imagedescription.ImageDescriptionRequest;
 import com.google.mlkit.genai.common.GenAiException;
-
 import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 
 public class ImageDescriberSingleton {
     // 1. The single instance of the class
@@ -50,22 +46,10 @@ public class ImageDescriberSingleton {
             Bitmap bitmap,
             ImageProxy imageProxy
     ) throws ExecutionException, InterruptedException {
-        // Check feature availability, status will be one of the following:
-        // UNAVAILABLE, DOWNLOADABLE, DOWNLOADING, AVAILABLE
-        Log.d("ingredients", "Preparing");
         try {
-            Log.d("ingredients", "fs");
             int featureStatus = imageDescriber.checkFeatureStatus().get();
-            Log.d("ingredients", Integer.toString(featureStatus));
-            Log.d("ingredients", Integer.toString(FeatureStatus.DOWNLOADABLE));
-            Log.d("ingredients", Integer.toString(FeatureStatus.DOWNLOADING));
-            Log.d("ingredients", Integer.toString(FeatureStatus.AVAILABLE));
             if (featureStatus == FeatureStatus.DOWNLOADABLE) {
-                Log.d("ingredients", "downloadable");
-                // Download feature if necessary.
-                // If downloadFeature is not called, the first inference request
-                // will also trigger the feature to be downloaded if it's not
-                // already downloaded.
+
                 imageDescriber.downloadFeature(new DownloadCallback() {
                     @Override
                     public void onDownloadCompleted() {
@@ -73,14 +57,13 @@ public class ImageDescriberSingleton {
                     }
 
                     @Override
-                    public void onDownloadFailed(GenAiException e) { imageProxy.close();
-                        Log.d("ingredients", "I am failed");}
+                    public void onDownloadFailed(GenAiException e) { /*imageProxy.close();*/ }
 
                     @Override
-                    public void onDownloadProgress(long totalBytesDownloaded) { Log.d("ingredients", "I am progress " + Long.toString(totalBytesDownloaded));}
+                    public void onDownloadProgress(long totalBytesDownloaded) {}
 
                     @Override
-                    public void onDownloadStarted(long bytesDownloaded) {Log.d("ingredients", "I am started");}
+                    public void onDownloadStarted(long bytesDownloaded) {}
                 });
             } else if (featureStatus == FeatureStatus.DOWNLOADING) {
                 // Inference request will automatically run once feature is
@@ -90,12 +73,10 @@ public class ImageDescriberSingleton {
                 // very quickly. However, if Gemini Nano is not already
                 // downloaded, the download process may take longer.
                 startImageDescriptionRequest(bitmap, imageProxy);
-                Log.d("ingredients", "I am downloading");
             } else if (featureStatus == FeatureStatus.AVAILABLE) {
                 startImageDescriptionRequest(bitmap, imageProxy);
-                Log.d("ingredients", "I am available");
             } else if (featureStatus == FeatureStatus.UNAVAILABLE) {
-                imageProxy.close();
+                //imageProxy.close();
             }
         } catch (ExecutionException | InterruptedException e) {
             Log.d("ingredients", e.toString());
@@ -114,7 +95,7 @@ public class ImageDescriberSingleton {
         // Start image description request with streaming response
         imageDescriber.runInference(imageDescriptionRequest, newText -> {
             Log.d("ingredients", newText);
-            imageProxy.close();
+            //imageProxy.close();
         });
 
     }
