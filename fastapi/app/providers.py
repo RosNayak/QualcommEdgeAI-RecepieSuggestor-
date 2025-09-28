@@ -27,7 +27,7 @@ def build_prompt(ingredients: List[str], servings: int, dietary: List[str] | Non
         ingredients=", ".join(ingredients) if ingredients else "none specified",
     )
 
-async def recipes_from_gemini(ingredients: List[str], servings: int, dietary: List[str] | None) -> Dict:
+async def recipes_from_gemini(ingredients: List[str] | None) -> Dict:
     if not GEMINI_API_KEY:
         # Surface a clear error to the client instead of a generic 500
         raise HTTPException(status_code=503, detail="Server is missing GEMINI_API_KEY")
