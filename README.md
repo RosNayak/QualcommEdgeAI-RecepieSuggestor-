@@ -1,5 +1,11 @@
 # QualcommEdgeAI Fridge - Smart Recipe Suggestion App
 
+##Contributors
+
+- Mathew Martin (mathew.martin.0001@gmail.com)
+- Roshan Nayak (roshannayak610@gmail.com
+- Neil Noronha (nn2685@nyu.edu)
+
 An intelligent Android application that uses computer vision and AI to analyze refrigerator contents and suggest recipes based on available ingredients. Built with Google ML Kit, WhisperX speech recognition, and Gemini AI for recipe generation.
 
 ## Features
@@ -66,7 +72,7 @@ implementation("com.google.android.material:material:1.8.0")
 ```
 
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
 - Android Studio Arctic Fox or later
@@ -92,7 +98,7 @@ implementation("com.google.android.material:material:1.8.0")
    ```
    ```
 
-## 📋 Usage
+## Usage
 
 ### Basic Operation
 
@@ -113,7 +119,7 @@ implementation("com.google.android.material:material:1.8.0")
 - **Background Optimization**: Reduced processing when app is not in foreground
 - **Memory Management**: Efficient ML model loading and caching
 
-## 🔧 Configuration
+## Configuration
 
 ### Performance Tuning
 
@@ -137,7 +143,7 @@ accumulatorHandler.postDelayed(this, 2000); // 2-second polling
 - **Debug**: Full logging, no optimization
 - **Release**: ProGuard enabled, optimized for performance
 
-## 🚀 Future Optimizations
+## Future Optimizations
 
 ### Qualcomm NPU Integration
 
@@ -159,7 +165,7 @@ accumulatorHandler.postDelayed(this, 2000); // 2-second polling
 - **Thermal Management**: Dynamic performance scaling based on device temperature
 - **Power Profiles**: Adaptive processing for battery optimization
 
-## 📊 Performance Metrics
+## Performance Metrics
 
 ### Current Benchmarks
 
@@ -174,7 +180,7 @@ accumulatorHandler.postDelayed(this, 2000); // 2-second polling
 - **Frame Skipping**: 50% CPU usage reduction
 - **Polling Optimization**: 25% background power savings
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/improvement`)
@@ -182,17 +188,17 @@ accumulatorHandler.postDelayed(this, 2000); // 2-second polling
 4. Push to branch (`git push origin feature/improvement`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Google ML Kit** for computer vision capabilities
 - **Qualcomm** for edge AI acceleration frameworks
 - **Google Gemini** for intelligent recipe generation
 
-## 📞 Support
+## Support
 
 For questions or issues:
 - Create an issue in this repository
@@ -200,5 +206,3 @@ For questions or issues:
 - Review the [FAQ](docs/FAQ.md) for common problems
 
 ---
-
-**Built with ❤️ for intelligent kitchen assistance**
