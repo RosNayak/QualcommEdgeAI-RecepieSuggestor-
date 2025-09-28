@@ -170,7 +170,7 @@ accumulatorHandler.postDelayed(this, 2000); // 2-second polling
 
 ### Current Benchmarks
 
-- **APK Size**: 33MB (optimized with ProGuard)
+- **APK Size**: ~56MB (optimized with ProGuard)
 - **Frame Processing**: Every 8th frame (~3.75 FPS at 30 FPS input)
 - **Memory Usage**: ~150MB average during operation
 - **Cold Start**: ~2-3 seconds app launch time
