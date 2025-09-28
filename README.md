@@ -77,7 +77,7 @@ implementation("com.google.android.material:material:1.8.0")
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/QualcommEdgeAI_Fridge.git
+   git clone https://github.com/yourusername/Qualcomm_Hackathon_FridgeChef.git
    cd QualcommEdgeAI_Fridge
    ```
 
