@@ -2,7 +2,6 @@ package com.example.recepiesuggestor.services;
 
 import android.content.Context;
 import android.util.Log;
-import com.example.recepiesuggestor.config.ApiKeyManager;
 import org.json.JSONObject;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -11,8 +10,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class WhisperApiService {
-    private static final String WHISPER_API_URL = "https://api.openai.com/v1/audio/transcriptions";
-    private static final String TAG = "WhisperApiService";
+    private static final String WHISPERX_SERVER_URL = "http://10.0.2.2:5001/command"; // Android emulator localhost
+    private static final String TAG = "WhisperXService";
 
     public interface TranscriptionCallback {
         void onSuccess(String transcription);
@@ -38,32 +37,27 @@ public class WhisperApiService {
     public void transcribeAudio(File audioFile, TranscriptionCallback callback) {
         executor.execute(() -> {
             try {
-                String apiKey = ApiKeyManager.getInstance(context).getApiKey();
-                if (apiKey == null) {
-                    callback.onError("API key not configured");
-                    return;
-                }
-
-                String transcription = makeWhisperApiCall(apiKey, audioFile);
+                String transcription = makeWhisperXApiCall(audioFile);
                 callback.onSuccess(transcription);
 
             } catch (Exception e) {
-                Log.e(TAG, "Failed to transcribe audio", e);
+                Log.e(TAG, "Failed to transcribe audio with WhisperX", e);
                 callback.onError(e.getMessage());
             }
         });
     }
 
-    private String makeWhisperApiCall(String apiKey, File audioFile) throws Exception {
-        URL url = new URL(WHISPER_API_URL);
+    private String makeWhisperXApiCall(File audioFile) throws Exception {
+        URL url = new URL(WHISPERX_SERVER_URL);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         String boundary = "----formdata-boundary-" + System.currentTimeMillis();
 
         conn.setRequestMethod("POST");
-        conn.setRequestProperty("Authorization", "Bearer " + apiKey);
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
         conn.setDoOutput(true);
+        conn.setConnectTimeout(5000); // 5 second timeout
+        conn.setReadTimeout(10000);   // 10 second timeout
 
         try (OutputStream os = conn.getOutputStream();
              PrintWriter writer = new PrintWriter(new OutputStreamWriter(os, "UTF-8"), true)) {
@@ -87,13 +81,6 @@ public class WhisperApiService {
 
             writer.append("\r\n");
 
-            // Add model field
-            writer.append("--" + boundary).append("\r\n");
-            writer.append("Content-Disposition: form-data; name=\"model\"").append("\r\n");
-            writer.append("\r\n");
-            writer.append("whisper-1");
-            writer.append("\r\n");
-
             // End boundary
             writer.append("--" + boundary + "--").append("\r\n");
             writer.flush();
@@ -112,15 +99,25 @@ public class WhisperApiService {
             }
 
             if (responseCode != 200) {
-                throw new Exception("Whisper API call failed: " + response.toString());
+                throw new Exception("WhisperX server call failed: " + response.toString());
             }
 
-            return extractTranscriptionFromResponse(response.toString());
+            return extractTranscriptionFromWhisperX(response.toString());
         }
     }
 
-    private String extractTranscriptionFromResponse(String response) throws Exception {
+    private String extractTranscriptionFromWhisperX(String response) throws Exception {
         JSONObject jsonResponse = new JSONObject(response);
-        return jsonResponse.getString("text").trim();
+
+        if (!jsonResponse.getBoolean("success")) {
+            throw new Exception("WhisperX transcription failed");
+        }
+
+        String text = jsonResponse.getString("text");
+        boolean isUpdateCommand = jsonResponse.getBoolean("is_update_command");
+
+        Log.d(TAG, "WhisperX result - Text: '" + text + "', Update command: " + isUpdateCommand);
+
+        return text.trim();
     }
 }

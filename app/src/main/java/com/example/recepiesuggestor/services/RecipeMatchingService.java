@@ -80,8 +80,16 @@ public class RecipeMatchingService implements GeminiApiService.RecipeGenerationC
     @Override
     public void onError(String error) {
         Log.e("RECIPE_MATCHING", "Failed to generate recipes: " + error);
-        if (listener != null) {
-            listener.onRecipesUpdated(new ArrayList<>());
+        // Don't clear recipes on API errors - keep existing ones
+        Log.w("RECIPE_MATCHING", "Keeping existing recipes due to API error: " + error);
+
+        // Show user-friendly error message
+        if (context != null) {
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                android.widget.Toast.makeText(context,
+                    "Recipe update failed - keeping current recipes",
+                    android.widget.Toast.LENGTH_SHORT).show();
+            });
         }
     }
 }

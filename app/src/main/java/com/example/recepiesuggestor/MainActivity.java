@@ -4,13 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -24,7 +22,6 @@ import com.example.recepiesuggestor.services.SpeechRecognitionService;
 import com.example.recepiesuggestor.ui.CameraXController;
 import com.example.recepiesuggestor.utils.PermissionHelper;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -92,13 +89,18 @@ public class MainActivity extends AppCompatActivity implements
         speechService = SpeechRecognitionService.getInstance(this);
         speechService.setVoiceCommandListener(this);
 
-        // Check if API key is configured, prompt user if not
-        checkApiKeyConfiguration();
+        // Configure API key programmatically
+        ApiKeyManager.getInstance(this).storeApiKey("AIzaSyDCdr4sP3eHLvtyQ0DN8GKodwWhL5RPh4M");
 
         // Add some test ingredients to verify system works
+        Log.d("RECIPE_INIT", "Adding test ingredients for debugging");
         IngredientAccumulator.getInstance().addIngredientName(this, "tomatoes");
         IngredientAccumulator.getInstance().addIngredientName(this, "basil");
         IngredientAccumulator.getInstance().addIngredientName(this, "mozzarella");
+
+        // Trigger initial recipe update to test Gemini API
+        Log.d("RECIPE_INIT", "Triggering initial recipe update");
+        recipeMatchingService.updateRecipes();
 
         PreviewView previewView = findViewById(R.id.camera_preview);
         ImageButton switchBtn = findViewById(R.id.btn_switch_camera);
@@ -112,10 +114,16 @@ public class MainActivity extends AppCompatActivity implements
                 () -> Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show()
         );
 
-        // Ask for microphone permission, then start speech recognition
+        // Ask for microphone permission, then start speech recognition (optional feature)
         permissionHelper.ensureMicrophonePermission(
-                () -> speechService.startListening(),
-                () -> Toast.makeText(this, "Microphone permission is required for voice commands", Toast.LENGTH_SHORT).show()
+                () -> {
+                    speechService.startListening();
+                    Toast.makeText(this, "Voice commands enabled - say 'Update' to refresh recipes", Toast.LENGTH_SHORT).show();
+                },
+                () -> {
+                    Log.w("VOICE_COMMANDS", "Microphone permission denied - voice commands disabled");
+                    Toast.makeText(this, "Voice commands disabled - recipes will still update automatically", Toast.LENGTH_SHORT).show();
+                }
         );
 
         if (switchBtn != null) {
@@ -185,8 +193,17 @@ public class MainActivity extends AppCompatActivity implements
             Log.d("VOICE_COMMAND", "Update command received - forcing recipe refresh");
             Toast.makeText(this, "Updating recipes...", Toast.LENGTH_SHORT).show();
 
+            // Store current recipes as backup in case API fails
+            List<Recipe> currentRecipes = new ArrayList<>(recipeList);
+
             // Force recipe update by calling the service directly
-            recipeMatchingService.updateRecipes(true);
+            try {
+                recipeMatchingService.updateRecipes(true);
+            } catch (Exception e) {
+                Log.e("VOICE_COMMAND", "Failed to update recipes via voice command", e);
+                Toast.makeText(this, "Recipe update failed - keeping current recipes", Toast.LENGTH_SHORT).show();
+                // Keep current recipes if update fails
+            }
         });
     }
 
@@ -205,30 +222,5 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void checkApiKeyConfiguration() {
-        ApiKeyManager apiKeyManager = ApiKeyManager.getInstance(this);
-        if (apiKeyManager.getApiKey() == null) {
-            showApiKeyDialog();
-        }
-    }
 
-    private void showApiKeyDialog() {
-        EditText editText = new EditText(this);
-        editText.setHint("Enter Gemini API Key");
-
-        new AlertDialog.Builder(this)
-                .setTitle("Configure Gemini API")
-                .setMessage("Please enter your Gemini API key to generate recipes:")
-                .setView(editText)
-                .setPositiveButton("Save", (dialog, which) -> {
-                    String apiKey = editText.getText().toString().trim();
-                    if (!apiKey.isEmpty()) {
-                        ApiKeyManager.getInstance(this).storeApiKey(apiKey);
-                        Toast.makeText(this, "API key saved securely", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .setCancelable(false)
-                .show();
-    }
 }
