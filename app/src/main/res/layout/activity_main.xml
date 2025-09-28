@@ -17,29 +17,11 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Camera Preview or Video View -->
-<!--        <SurfaceView-->
-<!--            android:id="@+id/camera_preview"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:layout_gravity="center" />-->
-
         <androidx.camera.view.PreviewView
             android:id="@+id/camera_preview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center" />
-
-
-        <!-- Alternative: Use VideoView for playing videos -->
-        <!--
-        <VideoView
-            android:id="@+id/video_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-        -->
 
         <!-- Overlay controls (optional) -->
         <LinearLayout
@@ -119,6 +101,17 @@
                 android:textColor="@android:color/black"
                 android:layout_marginBottom="16dp"
                 android:gravity="center" />
+
+<!--            &lt;!&ndash; Extracted nouns debug view CHECK WHY YOU NEED THIS&ndash;&gt;-->
+<!--            <TextView-->
+<!--                android:id="@+id/tv_extracted_nouns"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="Extracted nouns will appear here (debug)"-->
+<!--                android:textSize="14sp"-->
+<!--                android:textColor="@android:color/black"-->
+<!--                android:layout_marginBottom="8dp"-->
+<!--                android:padding="8dp" />-->
 
             <!-- RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView

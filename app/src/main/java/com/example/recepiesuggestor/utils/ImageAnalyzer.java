@@ -40,16 +40,16 @@ public class ImageAnalyzer implements ImageAnalysis.Analyzer {
                     imageDescriberSingleton.prepareAndStartImageDescription(bitmap, imageProxy);
                 } catch (ExecutionException e) {
                     // Handle exceptions thrown by the synchronous part of the Describer setup.
-                    Log.e("ingredients", "Describer setup failed due to ExecutionException. Closing proxy.", e);
+//                    Log.e("ingredients", "Describer setup failed due to ExecutionException. Closing proxy.", e);
                     imageProxy.close(); // Close proxy if setup fails synchronously
                 } catch (InterruptedException e) {
                     // Handle thread interruption.
-                    Log.e("ingredients", "Describer setup interrupted. Closing proxy.", e);
+//                    Log.e("ingredients", "Describer setup interrupted. Closing proxy.", e);
                     Thread.currentThread().interrupt();
                     imageProxy.close(); // Close proxy if setup fails synchronously
                 } catch (Exception e) {
                     // Catch any other synchronous runtime exceptions during execution.
-                    Log.e("ingredients", "Unexpected error in background analysis. Closing proxy.", e);
+//                    Log.e("ingredients", "Unexpected error in background analysis. Closing proxy.", e);
                     imageProxy.close();
                 }
             });

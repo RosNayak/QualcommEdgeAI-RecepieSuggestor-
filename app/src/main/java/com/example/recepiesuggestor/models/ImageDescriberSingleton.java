@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.util.Log;
 import androidx.camera.core.ImageProxy;
 
+import com.example.recepiesuggestor.data.IngredientAccumulator;
 import com.google.mlkit.genai.common.DownloadCallback;
 import com.google.mlkit.genai.common.FeatureStatus;
 import com.google.mlkit.genai.imagedescription.ImageDescriber;
@@ -12,6 +13,9 @@ import com.google.mlkit.genai.imagedescription.ImageDescriberOptions;
 import com.google.mlkit.genai.imagedescription.ImageDescription;
 import com.google.mlkit.genai.imagedescription.ImageDescriptionRequest;
 import com.google.mlkit.genai.common.GenAiException;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class ImageDescriberSingleton {
@@ -21,6 +25,12 @@ public class ImageDescriberSingleton {
     private static Context activityContext;
 
     private final ImageDescriber imageDescriber;
+
+    public interface NounsListener {
+        void onNouns(List<String> nouns);
+    }
+
+    private NounsListener nounsListener;
 
     // 3. Private constructor to prevent direct instantiation
     private ImageDescriberSingleton(Context context) {
@@ -32,6 +42,13 @@ public class ImageDescriberSingleton {
         // Create the labeler instance
         imageDescriber = ImageDescription.getClient(options);
         activityContext = context;
+
+        try {
+            // Delegate initialization to NLPTagger which handles assets and threading
+            com.example.recepiesuggestor.models.NLPTagger.get(context).init();
+        } catch (Exception e) {
+            Log.e("NLP_INIT", "Error initializing NLPTagger", e);
+        }
     }
 
     // 4. Public method to get the single instance
@@ -40,6 +57,10 @@ public class ImageDescriberSingleton {
             instance = new ImageDescriberSingleton(context);
         }
         return instance;
+    }
+
+    public void setNounsListener(NounsListener nounsListener) {
+        this.nounsListener = nounsListener;
     }
 
     public void prepareAndStartImageDescription(
@@ -57,7 +78,7 @@ public class ImageDescriberSingleton {
                     }
 
                     @Override
-                    public void onDownloadFailed(GenAiException e) { /*imageProxy.close();*/ }
+                    public void onDownloadFailed(GenAiException e) {}
 
                     @Override
                     public void onDownloadProgress(long totalBytesDownloaded) {}
@@ -66,12 +87,6 @@ public class ImageDescriberSingleton {
                     public void onDownloadStarted(long bytesDownloaded) {}
                 });
             } else if (featureStatus == FeatureStatus.DOWNLOADING) {
-                // Inference request will automatically run once feature is
-                // downloaded.
-                // If Gemini Nano is already downloaded on the device, the
-                // feature-specific LoRA adapter model will be downloaded
-                // very quickly. However, if Gemini Nano is not already
-                // downloaded, the download process may take longer.
                 startImageDescriptionRequest(bitmap, imageProxy);
             } else if (featureStatus == FeatureStatus.AVAILABLE) {
                 startImageDescriptionRequest(bitmap, imageProxy);
@@ -79,25 +94,168 @@ public class ImageDescriberSingleton {
                 //imageProxy.close();
             }
         } catch (ExecutionException | InterruptedException e) {
-            Log.d("ingredients", e.toString());
-            imageProxy.close();
+//            imageProxy.close();
         }
     }
+
+//    public void startImageDescriptionRequest(
+//            Bitmap bitmap,
+//            ImageProxy imageProxy
+//    ) {
+//        // Create task request
+//        ImageDescriptionRequest imageDescriptionRequest =
+//                ImageDescriptionRequest.builder(bitmap).build();
+//
+//        // Start image description request with streaming response
+//        imageDescriber.runInference(imageDescriptionRequest, newText -> {
+////            Log.d("ingredients", newText);
+//
+//
+//
+//            //imageProxy.close();
+//        });
+//
+//    }
 
     public void startImageDescriptionRequest(
             Bitmap bitmap,
             ImageProxy imageProxy
     ) {
-        // Create task request
         ImageDescriptionRequest imageDescriptionRequest =
                 ImageDescriptionRequest.builder(bitmap).build();
 
-        // Start image description request with streaming response
         imageDescriber.runInference(imageDescriptionRequest, newText -> {
             Log.d("ingredients", newText);
-            //imageProxy.close();
-        });
 
+            // First try POS-based extraction via NLPTagger (delegated in extractNouns)
+            List<String> nouns = extractNouns(newText);
+            // If empty, run a simple fallback extractor here to ensure we return something
+            if (nouns == null || nouns.isEmpty()) {
+                List<String> fb = fallbackExtractNouns(newText);
+                if (!fb.isEmpty()) nouns = fb;
+            }
+
+            // Add to app-scoped accumulator (deduplicated, preserved order)
+            try {
+                if (nouns != null && !nouns.isEmpty()) {
+                    IngredientAccumulator.getInstance().addIngredientNames(activityContext, nouns);
+                }
+            } catch (Exception e) {
+            }
+
+            // Retrieve the cumulative (aggregated) set and log that so the log shows history
+            try {
+                java.util.Set<String> aggregated = IngredientAccumulator.getInstance().getCurrentIngredients();
+                // Preserve insertion order by converting to a list for nicer formatting
+                java.util.List<String> aggList = new java.util.ArrayList<>(aggregated);
+                Log.d("ingredients_nouns", "Nouns: " + aggList.toString());
+            } catch (Exception e) {
+                Log.d("ingredients_nouns", "Nouns: " + String.valueOf(nouns));
+            }
+
+            // Notify listener on main thread if present (send only the current step nouns)
+            if (nounsListener != null) {
+                android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+                List<String> finalNouns = nouns;
+                h.post(() -> nounsListener.onNouns(finalNouns));
+            }
+
+//            imageProxy.close();
+        });
+    }
+
+    private List<String> extractNouns(String text) {
+        // Delegate to NLPTagger for extraction. Return empty list on failure.
+        try {
+            com.example.recepiesuggestor.models.NLPTagger tagger = com.example.recepiesuggestor.models.NLPTagger.get(activityContext);
+            // Ensure initialized (NLPTagger.init() is idempotent)
+            try {
+                tagger.init();
+            } catch (Exception ignored) {
+                // init may have already been called or fail; extractNouns will throw if not ready
+            }
+            return tagger.extractNouns(text);
+        } catch (Exception e) {
+            Log.e("NLP_EXTRACT", "Failed to extract nouns", e);
+            return new ArrayList<>();
+        }
+    }
+
+    // Lightweight fallback extractor: split on non-letters, remove stopwords, dedupe
+    private List<String> fallbackExtractNouns(String text) {
+        List<String> nouns = new ArrayList<>();
+        if (text == null || text.isEmpty()) return nouns;
+        // small stopword set
+        java.util.Set<String> stop = new java.util.HashSet<>(java.util.Arrays.asList(
+                "a", "an", "the", "and", "or", "but", "with", "without", "of", "in", "on", "for",
+                "to", "from", "by", "is", "are", "was", "were", "be", "been", "this", "that", "these",
+                "those", "it", "its", "as", "at", "about", "into", "over", "under", "other", "some", "next"
+        ));
+
+        java.util.LinkedHashSet<String> set = new java.util.LinkedHashSet<>();
+
+        // Common patterns in image descriptions; capture groups that often contain objects
+        String[] patterns = new String[]{
+                "holds? (?:a |an |the )?([\\w\\s-]+?)(?:\\.|,| and |$)",
+                "contains? (?:a |an |the )?([\\w\\s-]+?)(?:\\.|,| and |$)",
+                "on (?:a |an |the )?([\\w\\s-]+?)(?:\\.|,| and |$)",
+                "next to (?:a |an |the )?([\\w\\s-]+?)(?:\\.|,| and |$)",
+                "with (?:a |an |the )?([\\w\\s-]+?)(?:\\.|,| and |$)",
+                "there (?:is|are) (?:a |an |the )?([\\w\\s-]+?)(?:\\.|,| and |$)",
+                "(?:a |an |the )([\\w\\s-]+?)(?:\\.|,| and |$)"
+        };
+
+        android.util.Log.d("NLP_FALLBACK", "Fallback extractor input: '" + text + "'");
+        for (String pat : patterns) {
+            try {
+                java.util.regex.Pattern p = java.util.regex.Pattern.compile(pat, java.util.regex.Pattern.CASE_INSENSITIVE);
+                java.util.regex.Matcher m = p.matcher(text);
+                while (m.find()) {
+                    String g = m.group(1);
+                    android.util.Log.d("NLP_FALLBACK", "Pattern: '" + pat + "' matched group: '" + g + "'");
+                    if (g == null) continue;
+                    String cleaned = g.trim();
+                    // split on ' and ' to get multiple items inside the group
+                    String[] parts = cleaned.split("\\band\\b|,|;|\\band other\\b");
+                    for (String part : parts) {
+                        String candidate = part.trim().replaceAll("[^A-Za-z0-9\\s-]", "");
+                        if (candidate.isEmpty()) continue;
+                        // take last token as likely noun head
+                        String[] tokens = candidate.split("\\s+");
+                        String head = tokens[tokens.length - 1];
+                        String lc = head.toLowerCase();
+                        if (head.length() > 1 && !stop.contains(lc) && !lc.matches("^[0-9]+$")) {
+                            android.util.Log.d("NLP_FALLBACK", "Adding candidate noun: '" + head + "'");
+                            set.add(head);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        // As a final fallback, pick words longer than 2 characters that aren't stopwords
+        if (set.isEmpty()) {
+            String[] words = text.split("[^A-Za-z0-9]+");
+            for (String w : words) {
+                if (w == null) continue;
+                String s = w.trim();
+                if (s.length() <= 2) continue;
+                String lc = s.toLowerCase();
+                if (stop.contains(lc)) continue;
+                if (lc.matches("^[0-9]+$")) continue;
+                set.add(s);
+            }
+        }
+
+        nouns.addAll(set);
+        android.util.Log.d("NLP_FALLBACK", "Fallback extractor result: " + nouns.toString());
+        return nouns;
+    }
+
+    public void debugLogNouns(String text) {
+        List<String> nouns = extractNouns(text);
+//        Log.d("ingredients_nouns", "Debug Nouns: " + nouns.toString());
     }
 
     // Optional: Close the labeler when the app shuts down (e.g., in onDestroy)
