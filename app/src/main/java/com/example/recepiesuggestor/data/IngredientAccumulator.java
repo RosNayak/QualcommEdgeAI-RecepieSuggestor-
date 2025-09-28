@@ -27,13 +27,6 @@ public class IngredientAccumulator {
         return instance;
     }
 
-//    public void addLabels(Context context, List<com.google.mlkit.vision.label.ImageLabel> labels) {
-//        for (com.google.mlkit.vision.label.ImageLabel label : labels) {
-//            String ingredientName = label.getText();
-//            detectedIngredients.add(ingredientName);
-//        }
-//    }
-
     public void addIngredientName(Context context, String ingredientName) {
         if (ingredientName == null) return;
         String trimmed = ingredientName.trim();
