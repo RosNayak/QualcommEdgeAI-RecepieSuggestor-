@@ -51,34 +51,6 @@
                 android:layout_height="1dp"
                 android:layout_weight="1" />
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageButton
-                    android:id="@+id/btn_switch_camera"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_menu_rotate"
-                    android:contentDescription="Switch Camera"
-                    android:layout_marginEnd="8dp"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter" />
-
-                <ImageButton
-                    android:id="@+id/btn_flash"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@android:drawable/ic_menu_gallery"
-                    android:contentDescription="Toggle Flash"
-                    android:padding="8dp"
-                    android:scaleType="fitCenter" />
-
-            </LinearLayout>
-
         </LinearLayout>
 
     </FrameLayout>
@@ -126,17 +98,6 @@
                 android:textColor="@android:color/black"
                 android:layout_marginBottom="16dp"
                 android:gravity="center" />
-
-<!--            &lt;!&ndash; Extracted nouns debug view CHECK WHY YOU NEED THIS&ndash;&gt;-->
-<!--            <TextView-->
-<!--                android:id="@+id/tv_extracted_nouns"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="Extracted nouns will appear here (debug)"-->
-<!--                android:textSize="14sp"-->
-<!--                android:textColor="@android:color/black"-->
-<!--                android:layout_marginBottom="8dp"-->
-<!--                android:padding="8dp" />-->
 
             <!-- RecyclerView -->
             <androidx.recyclerview.widget.RecyclerView
