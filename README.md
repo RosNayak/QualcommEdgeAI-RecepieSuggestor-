@@ -2,14 +2,14 @@
 
 An intelligent Android application that uses computer vision and AI to analyze refrigerator contents and suggest recipes based on available ingredients. Built with Google ML Kit, WhisperX speech recognition, and Gemini AI for recipe generation.
 
-## 🚀 Features
+## Features
 
 - **Real-time Ingredient Detection**: Camera-based ingredient recognition using Google ML Kit GenAI Image Description
 - **Smart Recipe Suggestions**: Gemini AI generates personalized recipes based on detected ingredients
 - **Optimized Performance**: ProGuard optimization and frame skipping for efficient processing
 - **Edge AI Ready**: Architecture designed for future Qualcomm NPU acceleration
 
-## 🏗️ Architecture
+## Architecture
 
 ### AI/ML Components
 
@@ -18,11 +18,6 @@ An intelligent Android application that uses computer vision and AI to analyze r
 - **Frame Processing**: Optimized to process every 8th frame for performance
 - **OpenNLP**: Natural language processing for ingredient extraction
 - **Ingredient Accumulator**: Real-time ingredient tracking and deduplication
-
-#### Speech Recognition
-- **WhisperX Server**: Python-based speech recognition backend
-- **Voice Commands**: "Update" command triggers recipe generation
-- **Local Processing**: Self-hosted for privacy and speed
 
 #### Recipe Generation
 - **Google Generative AI (Gemini)**: AI-powered recipe creation
@@ -36,14 +31,14 @@ An intelligent Android application that uses computer vision and AI to analyze r
 - **Polling Optimization**: 2-second ingredient accumulator polling
 - **Background Processing**: Threaded execution for ML operations
 
-## 📱 User Interface
+## User Interface
 
 - **Camera Preview**: Real-time ingredient scanning
 - **Recipe List**: ScrollView with suggested recipes
 - **Recipe Details**: Detailed ingredient lists and cooking instructions
 - **Voice Feedback**: Audio confirmation of detected commands
 
-## 🛠️ Technical Stack
+## Technical Stack
 
 ### Android Components
 - **Language**: Java
@@ -194,7 +189,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Google ML Kit** for computer vision capabilities
-- **OpenAI Whisper** for speech recognition technology
 - **Qualcomm** for edge AI acceleration frameworks
 - **Google Gemini** for intelligent recipe generation
 
