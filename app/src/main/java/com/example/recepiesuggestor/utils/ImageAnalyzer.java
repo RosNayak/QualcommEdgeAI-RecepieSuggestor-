@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 @androidx.camera.core.ExperimentalGetImage
 public class ImageAnalyzer implements ImageAnalysis.Analyzer {
 
-    private final long SKIP_FRAMES = 4; // To process every 4th frame (0, 4, 8, ...)
+    private final long SKIP_FRAMES = 8; // To process every 8th frame (0, 8, 16, ...)
     private long frameCount = 0; // Starts at 0
 
     private final ImageDescriberSingleton imageDescriberSingleton;

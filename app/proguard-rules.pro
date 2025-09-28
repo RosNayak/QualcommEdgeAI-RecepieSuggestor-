@@ -19,3 +19,47 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep ML Kit GenAI classes and methods
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.mlkit.**
+-dontwarn com.google.android.gms.**
+
+# Keep Google Generative AI classes
+-keep class com.google.ai.client.generativeai.** { *; }
+-dontwarn com.google.ai.client.generativeai.**
+
+# Keep OpenNLP classes
+-keep class opennlp.** { *; }
+-dontwarn opennlp.**
+
+# Keep CameraX classes
+-keep class androidx.camera.** { *; }
+-dontwarn androidx.camera.**
+
+# Keep RecyclerView classes
+-keep class androidx.recyclerview.** { *; }
+
+# Keep application-specific classes that might be accessed via reflection
+-keep class com.example.recepiesuggestor.models.** { *; }
+-keep class com.example.recepiesuggestor.services.** { *; }
+-keep class com.example.recepiesuggestor.data.** { *; }
+
+# Keep Recipe class for Parcelable
+-keep class com.example.recepiesuggestor.Recipe { *; }
+
+# Keep callback interfaces
+-keep interface com.example.recepiesuggestor.** {
+    public *;
+}
+
+# Keep debugging information for better crash reports
+-keepattributes SourceFile,LineNumberTable
+-keepattributes Signature
+-keepattributes *Annotation*
+
+# Keep native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}

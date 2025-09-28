@@ -17,7 +17,8 @@
       "Bash(curl:*)",
       "Bash(adb shell:*)",
       "Bash(adb forward:*)",
-      "Bash(adb reverse:*)"
+      "Bash(adb reverse:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []
