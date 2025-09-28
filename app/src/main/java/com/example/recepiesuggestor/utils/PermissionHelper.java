@@ -14,8 +14,10 @@ public class PermissionHelper {
     private final ActivityResultLauncher<String> cameraPermissionLauncher;
     private final ActivityResultLauncher<String> microphonePermissionLauncher;
 
-    private Runnable onGranted;
-    private Runnable onDenied;
+    private Runnable onCameraGranted;
+    private Runnable onCameraDenied;
+    private Runnable onMicGranted;
+    private Runnable onMicDenied;
 
     public PermissionHelper(ComponentActivity activity) {
         this.activity = activity;
@@ -23,30 +25,30 @@ public class PermissionHelper {
         cameraPermissionLauncher =
                 activity.registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
                     if (granted) {
-                        if (onGranted != null) onGranted.run();
+                        if (onCameraGranted != null) onCameraGranted.run();
                     } else {
-                        if (onDenied != null) onDenied.run();
+                        if (onCameraDenied != null) onCameraDenied.run();
                     }
                 });
 
         microphonePermissionLauncher =
                 activity.registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
                     if (granted) {
-                        if (onGranted != null) onGranted.run();
+                        if (onMicGranted != null) onMicGranted.run();
                     } else {
-                        if (onDenied != null) onDenied.run();
+                        if (onMicDenied != null) onMicDenied.run();
                     }
                 });
     }
 
     /** Checks CAMERA permission; if not granted, requests it. */
     public void ensureCameraPermission(Runnable onGranted, Runnable onDenied) {
-        this.onGranted = onGranted;
-        this.onDenied = onDenied;
+        this.onCameraGranted = onGranted;
+        this.onCameraDenied = onDenied;
 
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED) {
-            if (this.onGranted != null) this.onGranted.run();
+            if (this.onCameraGranted != null) this.onCameraGranted.run();
         } else {
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
@@ -54,12 +56,12 @@ public class PermissionHelper {
 
     /** Checks RECORD_AUDIO permission; if not granted, requests it. */
     public void ensureMicrophonePermission(Runnable onGranted, Runnable onDenied) {
-        this.onGranted = onGranted;
-        this.onDenied = onDenied;
+        this.onMicGranted = onGranted;
+        this.onMicDenied = onDenied;
 
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED) {
-            if (this.onGranted != null) this.onGranted.run();
+            if (this.onMicGranted != null) this.onMicGranted.run();
         } else {
             microphonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
         }
