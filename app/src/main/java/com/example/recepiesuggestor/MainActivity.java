@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements
             } catch (Exception e) {
                 Log.e("ACC_POLL", "Failed to read accumulator", e);
             }
-            accumulatorHandler.postDelayed(this, 1000);
+            accumulatorHandler.postDelayed(this, 2000);
         }
     };
 
