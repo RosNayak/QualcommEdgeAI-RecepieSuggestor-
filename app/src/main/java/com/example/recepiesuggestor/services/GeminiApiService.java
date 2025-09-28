@@ -41,16 +41,21 @@ public class GeminiApiService {
     }
 
     public void generateRecipes(List<String> ingredients, RecipeGenerationCallback callback) {
+        Log.d(TAG, "generateRecipes called with ingredients: " + ingredients);
         executor.execute(() -> {
             try {
                 String apiKey = ApiKeyManager.getInstance(context).getApiKey();
                 if (apiKey == null) {
+                    Log.e(TAG, "API key not configured");
                     callback.onError("API key not configured");
                     return;
                 }
 
+                Log.d(TAG, "API key found, building prompt");
                 String prompt = buildPrompt(ingredients);
+                Log.d(TAG, "Making API call to Gemini");
                 String response = makeApiCall(apiKey, prompt);
+                Log.d(TAG, "Gemini API call successful");
                 callback.onSuccess(response);
 
             } catch (Exception e) {

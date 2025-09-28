@@ -88,8 +88,8 @@ public class SpeechRecognitionService implements WhisperApiService.Transcription
         int bufferSize = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT);
         byte[] buffer = new byte[bufferSize];
 
-        // Record for 3 seconds
-        long recordingDuration = 3000;
+        // Record for 800ms for ultra-fast response with WhisperX
+        long recordingDuration = 800;
         long startTime = System.currentTimeMillis();
 
         try {
@@ -122,10 +122,17 @@ public class SpeechRecognitionService implements WhisperApiService.Transcription
             Log.e(TAG, "Error recording audio", e);
         }
 
-        // Auto-restart listening after processing
-        if (isRecording.get()) {
-            startListening();
-        }
+        // Auto-restart listening immediately for continuous detection
+        new Thread(() -> {
+            try {
+                Thread.sleep(100); // Brief pause to prevent resource conflicts
+                if (isRecording.get()) {
+                    startListening();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     private void writeWavHeader(FileOutputStream fos, int dataSize, int sampleRate, int channels) throws IOException {
@@ -194,11 +201,11 @@ public class SpeechRecognitionService implements WhisperApiService.Transcription
 
     @Override
     public void onSuccess(String transcription) {
-        Log.d(TAG, "Transcription: " + transcription);
+        Log.d(TAG, "WhisperX Transcription: " + transcription);
 
         // Check for "update" command (case insensitive)
         if (transcription.toLowerCase().contains("update")) {
-            Log.d(TAG, "Update command detected!");
+            Log.d(TAG, "Update command detected via WhisperX!");
             if (commandListener != null) {
                 commandListener.onUpdateCommand();
             }

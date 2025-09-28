@@ -4,7 +4,15 @@
       "Bash(adb logcat:*)",
       "Bash(./gradlew:*)",
       "Bash(adb install:*)",
-      "Bash(adb shell am start:*)"
+      "Bash(adb shell am start:*)",
+      "Bash(chmod:*)",
+      "Bash(python3:*)",
+      "Bash(source:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(curl http://localhost:5001/health)",
+      "Bash(adb shell am force-stop:*)",
+      "Bash(adb shell pm clear:*)"
     ],
     "deny": [],
     "ask": []
