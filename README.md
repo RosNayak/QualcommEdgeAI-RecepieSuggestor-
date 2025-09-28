@@ -3,7 +3,7 @@
 ## Contributors
 
 - Mathew Martin (mathew.martin.0001@gmail.com)
-- Roshan Nayak (roshannayak610@gmail.com
+- Roshan Nayak (roshannayak610@gmail.com)
 - Neil Noronha (nn2685@nyu.edu)
 
 ## Summary
