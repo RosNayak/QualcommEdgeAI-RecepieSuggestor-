@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements
         speechService.setVoiceCommandListener(this);
 
         // Configure API key programmatically
-        ApiKeyManager.getInstance(this).storeApiKey("AIzaSyDCdr4sP3eHLvtyQ0DN8GKodwWhL5RPh4M");
+        ApiKeyManager.getInstance(this).storeApiKey();
 
         // Recipe updates disabled on app start - only triggered by "Update" voice command
         Log.d("RECIPE_INIT", "App initialized - say 'Update' to generate recipes");
