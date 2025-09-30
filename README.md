@@ -206,7 +206,5 @@ https://drive.google.com/file/d/19DC5NtdKM5_XFdeCP0JIHpTeeoW8BNFb/view?usp=drive
 
 For questions or issues:
 - Create an issue in this repository
-- Check the [documentation](docs/) for detailed guides
-- Review the [FAQ](docs/FAQ.md) for common problems
 
 ---
